@@ -6,9 +6,10 @@ This module sets up an error handling and notification system for AWS Step Funct
 
 ```mermaid
 graph TD
-    SF[Step Function] -->|Execution Error| EP[EventBridge Pipe]
-    EP -->|Routes Errors| DLQ[Dead Letter Queue<br/>SQS]
-    DLQ -->|Reprocess| SF
+    ESF[Express Step Function] -->|Execution Error| EBR[EventBridge Rule]
+    EBR -->|Routes Errors| DLQ[Dead Letter Queue<br/>SQS]
+    DLQ -->|Reprocess| EBP[EventBridge Pipe]
+    EBP -->|Reprocess| ESF
     DLQ -->|Rate Alarm| CWR[CloudWatch Alarm<br/>Rate-based]
     DLQ -->|Volume Alarm| CWV[CloudWatch Alarm<br/>Volume-based]
     CWR -->|Notifications| SNS1[Rate Alert<br/>SNS Topic]
@@ -18,7 +19,7 @@ graph TD
 ## Components
 
 - **Step Function**: The state machine being monitored for errors
-- **EventBridge Pipe**: Captures and routes Step Function execution errors to DLQ
+- **EventBridge Rule**: Captures and routes Step Function execution errors to DLQ
 - **SQS Dead Letter Queue**:
   - Stores failed execution details
   - Used to retry failed Step Function executions
@@ -29,6 +30,7 @@ graph TD
 - **SNS Topics**:
   - Rate alerts: Notifications for error rate thresholds
   - Volume alerts: Notifications for error count thresholds
+- **EventBridge Pipe**: Allows operators to turn on/off dead letter queue reprocessing
 
 ## Usage
 
@@ -40,7 +42,7 @@ module "example_context" {
   attributes = ["example", "sfn"]
 }
 
-module "step_function_error_notification" {
+module "express_step_function_error_notification" {
   source                = "../../"
   context               = module.example_context.self
   state_machine_arn     = aws_sfn_state_machine.example.arn
