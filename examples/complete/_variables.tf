@@ -4,20 +4,8 @@ variable "cloudwatch_log_retention_days" {
   default     = 14
 }
 
-variable "lambda_async_config_maximum_retry_attempts" {
-  description = "Maximum retry attempts for async Lambda invocations"
-  type        = number
-  default     = 2
-}
-
-variable "lambda_async_config_maximum_event_age_in_seconds" {
-  description = "Maximum event age in seconds for async Lambda invocations"
-  type        = number
-  default     = 3600
-}
-
 variable "sqs_queue_name" {
-  description = "Name of the SQS queue"
+  description = "Name of the dead letter SQS queue"
   type        = string
   default     = "example-queue"
 }
