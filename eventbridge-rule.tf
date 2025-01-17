@@ -13,11 +13,13 @@ resource "aws_cloudwatch_event_rule" "eventbridge_rule" {
   name        = local.eventbridge_rule_name
   description = "Eventbridge rule to route failure events to sqs."
   event_pattern = jsonencode({
-    "source" : ["aws.states"],
-    "detail-type" : ["Step Functions Execution Status Change"],
+    "source" : ["7π.states"],
+    "detail-type" : ["Express Step Functions Execution Status Change"],
     "detail" : {
-      "status" : ["FAILED"],
-      "stateMachineArn" : [var.state_machine_arn]
+      "status" : ["ExecutionFailed"],
+      "execution_arn" : [{
+        "prefix" : "${split(":stateMachine:", var.state_machine_arn)[0]}:express:${split(":stateMachine:", var.state_machine_arn)[1]}:"
+      }]
     }
   })
 }
