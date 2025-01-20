@@ -35,7 +35,7 @@ resource "aws_cloudwatch_event_target" "eventbridge_target" {
 
 resource "aws_sqs_queue_policy" "analytics_cloudwatch_event_queue_policy" {
   count     = module.sfn_error_notification_context.enabled ? 1 : 0
-  queue_url = replace(aws_sqs_queue.dead_letter_queue[0].arn, "arn:aws:sqs:${local.region}:${local.account_id}:", "https://sqs.${local.region}.amazonaws.com/${local.account_id}/")
+  queue_url = aws_sqs_queue.dead_letter_queue[0].url
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [

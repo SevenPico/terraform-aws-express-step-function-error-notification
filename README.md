@@ -57,23 +57,6 @@ This module creates a single instance of the Lambda function which is shared acr
 
 see [example](./examples/complete.main.tf) for a complete example.
 
-```hcl
-module "example_context" {
-  source     = "registry.terraform.io/SevenPico/context/null"
-  version    = "2.0.0"
-  context    = module.context.self
-  attributes = ["example", "sfn"]
-}
-
-module "express_step_function_error_notification" {
-  source                = "../../"
-  context               = module.example_context.self
-  state_machine_arn     = aws_sfn_state_machine.example.arn
-  eventbridge_pipe_name = "error-handler-pipe"
-  sqs_queue_name        = "error-dlq"
-}
-```
-
 ## License
 
 This project is licensed under the MIT License.
