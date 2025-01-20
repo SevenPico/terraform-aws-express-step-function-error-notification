@@ -31,3 +31,7 @@ override.tf.json
 .idea/
 .dist
 node_modules/
+.env
+
+generated-backend.tf
+generated-providers.tf

@@ -4,7 +4,7 @@ module "example_step_function" {
   context    = module.example_context.self
   attributes = ["example", "notification"]
 
-  definition = jsonencode({
+  definition = {
     StartAt : "PassState",
     States : {
       PassState : {
@@ -12,7 +12,7 @@ module "example_step_function" {
         End : true
       }
     }
-  })
+  }
   cloudwatch_log_group_kms_key_id        = null
   cloudwatch_log_group_name              = "/aws/vendedlogs/states/${module.example_context.id}-example-step-function"
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_retention_days
