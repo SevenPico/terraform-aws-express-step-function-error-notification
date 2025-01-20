@@ -11,6 +11,8 @@ locals {
   stage       = basename(get_terragrunt_dir()) //
   domain_name = "${local.stage}.${local.project}.${local.root_domain}"
 
+  enabled = get_env("ENABLED")
+
   tags = { Source = "Managed by Terraform" }
   regex_replace_chars = "/[^-a-zA-Z0-9]/"
   delimiter           = "-"
@@ -27,6 +29,7 @@ inputs = {
   root_domain = local.root_domain
 
   # Standard Context
+  enabled             = local.enabled
   region              = local.region
   tenant              = local.tenant
   project             = local.project

@@ -3,7 +3,7 @@ module "example_context" {
   version    = "2.0.0"
   context    = module.context.self
   attributes = ["example"]
-  enabled    = true
+  enabled    = module.context.enabled
 }
 
 module "express_sfn_error_notifications" {
