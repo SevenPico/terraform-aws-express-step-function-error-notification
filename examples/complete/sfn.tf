@@ -5,11 +5,11 @@ module "example_step_function" {
   attributes = ["example", "notification"]
 
   definition = jsonencode({
-    StartAt: "PassState",
-    States: {
-      PassState: {
-        Type: "Pass",
-        End: true
+    StartAt : "PassState",
+    States : {
+      PassState : {
+        Type : "Pass",
+        End : true
       }
     }
   })
@@ -28,7 +28,7 @@ module "example_step_function" {
   role_permissions_boundary = null
   step_function_name        = null
   tracing_enabled           = false
-  type                      = "STANDARD"
+  type                      = "EXPRESS"
   tags                      = module.example_context.tags
 }
 

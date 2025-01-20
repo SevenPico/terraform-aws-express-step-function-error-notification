@@ -5,7 +5,7 @@ module "example_context" {
   attributes = ["example", "sfn"]
 }
 
-module "async_sfn_error_notifications" {
+module "express_sfn_error_notifications" {
   source     = "../../"
   context    = module.example_context.self
   attributes = ["example", "sfn"]

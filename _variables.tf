@@ -3,14 +3,24 @@ variable "state_machine_arn" {
   type        = string
 }
 
-variable "sqs_kms_key_id" {
-  description = "(Optional) Managed key for encryption at rest."
+variable "rate_sns_topic_arn" {
+  description = "ARN of the SNS topic for rate alarm notifications."
+  type        = string
+}
+
+variable "volume_sns_topic_arn" {
+  description = "ARN of the SNS topic for volume alarm notifications."
+  type        = string
+}
+
+variable "sqs_queue_name" {
+  description = "(Optional) Name of the SQS Dead Letter Queue to hold failed execution messages."
   type        = string
   default     = null
 }
 
-variable "sqs_queue_name" {
-  description = "(Optional) Name of the SQS Dead Letter Queue."
+variable "sqs_kms_key_id" {
+  description = "(Optional) Managed key for encryption at rest."
   type        = string
   default     = null
 }
@@ -70,26 +80,15 @@ variable "eventbridge_pipe_log_level" {
 }
 
 variable "cloudwatch_log_retention_days" {
-  description = "The number of days to retain logs in AWS CloudWatch before they are automatically deleted."
+  description = "(Optional) The number of days to retain logs in AWS CloudWatch before they are automatically deleted."
   type        = number
   default     = 90
 }
 
 variable "target_step_function_input_template" {
-  description = "(Optional) The event transformation template for step function."
+  description = "(Optional) The transformation template to prepare dead letter messages to be sent as step function re-execution input."
   type        = string
   default     = "<$.detail.input>"
-}
-
-
-variable "rate_sns_topic_arn" {
-  description = "ARN of the SNS topic for rate alarm notifications. Defaults to an empty string."
-  type        = string
-}
-
-variable "volume_sns_topic_arn" {
-  description = "ARN of the SNS topic for volume alarm notifications. Defaults to an empty string."
-  type        = string
 }
 
 variable "sns_kms_key_id" {
@@ -108,4 +107,9 @@ variable "volume_alarm_name" {
   description = "(Optional) Name of the volume alarm. Defaults to null."
   type        = string
   default     = null
+}
+
+variable "state_machine_arns" {
+  description = "List of Step Function ARNs to monitor."
+  type        = list(string)
 }

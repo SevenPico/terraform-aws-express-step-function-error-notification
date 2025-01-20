@@ -1,6 +1,6 @@
 # Terraform AWS Step Function Error Notification
 
-This module sets up an error handling and notification system for AWS Step Functions using EventBridge Rules, SQS DLQ, CloudWatch Alarms, and SNS Topics. It provides an EventBridge Pipe to allow operators to turn on/off dead letter queue reprocessing.
+This module sets up an error handling and notification system for AWS **Express** Step Functions using EventBridge Rules, SQS DLQ, CloudWatch Alarms, and SNS Topics. It provides an EventBridge Pipe to allow operators to turn on/off dead letter queue reprocessing.
 
 ## Architecture Diagram
 
@@ -54,6 +54,14 @@ This module creates a single instance of the Lambda function which is shared acr
 - **EventBridge Pipe**: Allows operators to turn on/off dead letter queue reprocessing
 
 ## Usage
+
+see [example](./examples/complete.main.tf) for a complete example.
+
+## Requirements
+
+| Name               | Description                           | Type           | Required |
+| ------------------ | ------------------------------------- | -------------- | -------- |
+| state_machine_arns | List of Step Function ARNs to monitor | `list(string)` | yes      |
 
 ```hcl
 module "example_context" {

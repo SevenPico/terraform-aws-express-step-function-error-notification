@@ -35,11 +35,11 @@ output "cloudwatch_volume_alarm_name" {
 }
 
 output "eventbridge_pipe_name" {
-  description = "Name of the EventBridge Pipe."
+  description = "Name of the re-execution EventBridge Pipe."
   value       = try(aws_pipes_pipe.pipe[0].name, "")
 }
 
 output "eventbridge_pipe_arn" {
-  description = "ARN of the EventBridge Pipe."
+  description = "ARN of the re-execution EventBridge Pipe."
   value       = try(aws_pipes_pipe.pipe[0].arn, "")
 }
