@@ -6,7 +6,7 @@ locals {
   root_domain = get_env("ROOT_DOMAIN")
 
   namespace   = get_env("NAMESPACE")
-  project     = replace(basename(get_repo_root()), "terraform-", "")
+  project     = "aws-express-step-function-error-notification"
   environment = get_env("ENVIRONMENT") // "eg"
   stage       = basename(get_terragrunt_dir()) //
   domain_name = "${local.stage}.${local.project}.${local.root_domain}"
