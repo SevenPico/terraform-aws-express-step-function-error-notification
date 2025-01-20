@@ -55,6 +55,3 @@ resource "aws_sqs_queue_policy" "analytics_cloudwatch_event_queue_policy" {
     ]
   })
 }
-
-resource "aws_cloudwatch_event_rule" "step_function_monitor" {
-  count       = module.sfn_error_notification_context.enabled ? 1 : 0

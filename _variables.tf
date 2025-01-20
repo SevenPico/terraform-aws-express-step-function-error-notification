@@ -108,8 +108,3 @@ variable "volume_alarm_name" {
   type        = string
   default     = null
 }
-
-variable "state_machine_arns" {
-  description = "List of Step Function ARNs to monitor."
-  type        = list(string)
-}

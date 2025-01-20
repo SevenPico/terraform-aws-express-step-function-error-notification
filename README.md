@@ -57,12 +57,6 @@ This module creates a single instance of the Lambda function which is shared acr
 
 see [example](./examples/complete.main.tf) for a complete example.
 
-## Requirements
-
-| Name               | Description                           | Type           | Required |
-| ------------------ | ------------------------------------- | -------------- | -------- |
-| state_machine_arns | List of Step Function ARNs to monitor | `list(string)` | yes      |
-
 ```hcl
 module "example_context" {
   source     = "registry.terraform.io/SevenPico/context/null"
