@@ -19,7 +19,7 @@ module "example_step_function" {
 
   logging_configuration = {
     include_execution_data = true,
-    level                  = "ERROR"
+    level                  = "ALL"
   }
   policy_document_count     = 1
   policy_documents          = try([data.aws_iam_policy_document.example_step_function_policy_document[0].json], [])
