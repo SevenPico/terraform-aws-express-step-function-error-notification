@@ -1,6 +1,8 @@
 # Terraform AWS Step Function Error Notification
 
-This module sets up an error handling and notification system for AWS **Express** Step Functions using EventBridge Rules, SQS DLQ, CloudWatch Alarms, and SNS Topics. It provides an EventBridge Pipe to allow operators to turn on/off dead letter queue reprocessing.
+This module sets up an error handling and notification system for AWS **Express** Step Functions using EventBridge Rules, SQS DLQ, CloudWatch Alarms, and SNS Topics.
+
+<!-- It provides an EventBridge Pipe to allow operators to turn on/off dead letter queue reprocessing. -->
 
 ## Architecture Diagram
 
@@ -8,8 +10,8 @@ This module sets up an error handling and notification system for AWS **Express*
 flowchart TD
     ESF[Express Step Function] -->|Execution Error| EBR[EventBridge Rule]
     EBR -->|Routes Errors| DLQ[Dead Letter Queue<br/>SQS]
-    DLQ -->|Reprocess| EBP[EventBridge Pipe]
-    EBP -->|Reprocess| ESF
+    <!-- DLQ -->|Reprocess| EBP[EventBridge Pipe] -->
+    <!-- EBP -->|Reprocess| ESF -->
     DLQ -->|Rate Alarm| CWR[CloudWatch Alarm<br/>Rate-based]
     DLQ -->|Volume Alarm| CWV[CloudWatch Alarm<br/>Volume-based]
     CWR -->|Notifications| SNS1[Rate Alert<br/>SNS Topic]
@@ -31,7 +33,7 @@ This module does the following for each provided Express Step Function:
 5. Creates a CloudWatch Alarm to monitor the total number of execution failures
 6. Creates an SNS Topic to notify operators of execution failure rate alerts
 7. Creates an SNS Topic to notify operators of execution failure volume alerts
-8. Creates an EventBridge Pipe to allow operators to turn on/off dead letter queue reprocessing to the Express Step Function
+<!-- 8. Creates an EventBridge Pipe to allow operators to turn on/off dead letter queue reprocessing to the Express Step Function -->
 
 This module creates a single instance of the Lambda function which is shared across all Express Step Functions.
 
@@ -51,7 +53,7 @@ This module creates a single instance of the Lambda function which is shared acr
 - **SNS Topics**:
   - Rate alerts: Notifications for error rate thresholds
   - Volume alerts: Notifications for error count thresholds
-- **EventBridge Pipe**: Allows operators to turn on/off dead letter queue reprocessing
+  <!-- - **EventBridge Pipe**: Allows operators to turn on/off dead letter queue reprocessing -->
 
 ## Usage
 
