@@ -1,8 +1,8 @@
 resource "aws_cloudwatch_metric_alarm" "rate_alarm" {
-  count             = module.sfn_error_notification_context.enabled ? 1 : 0
+  for_each          = module.sfn_error_notification_context.enabled ? local.step_functions : {}
   depends_on        = [var.rate_sns_topic_arn]
-  alarm_name        = "${module.sfn_error_notification_context.id}-rate"
-  alarm_description = "ALARM when the rate of growth for the ${module.sfn_error_notification_context.id} Dead Letter Queue exceeds the threshold"
+  alarm_name        = "${each.value.name}-rate-alarm"
+  alarm_description = "ALARM when the rate of growth for the ${each.value.name} Dead Letter Queue exceeds the threshold"
 
   metric_query {
     id          = "e1"
@@ -18,7 +18,7 @@ resource "aws_cloudwatch_metric_alarm" "rate_alarm" {
       period      = var.alarms_period
       stat        = "Maximum"
       dimensions = {
-        QueueName = module.sfn_error_notification_context.id
+        QueueName = each.value.sqs_queue_name
       }
     }
     return_data = false
@@ -31,15 +31,20 @@ resource "aws_cloudwatch_metric_alarm" "rate_alarm" {
   treat_missing_data  = "ignore"
   alarm_actions       = [var.rate_sns_topic_arn]
   ok_actions          = [var.rate_sns_topic_arn]
-  tags                = module.sfn_error_notification_context.tags
+  tags = merge(
+    module.sfn_error_notification_context.tags,
+    {
+      Name = "${each.value.name}-dlq-rate-alarm"
+    }
+  )
 }
 
 resource "aws_cloudwatch_metric_alarm" "volume_alarm" {
-  count      = module.sfn_error_notification_context.enabled ? 1 : 0
+  for_each   = module.sfn_error_notification_context.enabled ? local.step_functions : {}
   depends_on = [var.volume_sns_topic_arn]
 
-  alarm_name          = "${module.sfn_error_notification_context.id}-volume"
-  alarm_description   = "ALARM when the ${module.sfn_error_notification_context.id} Dead Letter Queue has messages remaining to reprocess"
+  alarm_name          = "${each.value.name}-volume-alarm"
+  alarm_description   = "ALARM when the ${each.value.name} Dead Letter Queue has messages remaining to reprocess"
   metric_name         = "ApproximateNumberOfMessagesVisible"
   namespace           = "AWS/SQS"
   statistic           = "Maximum"
@@ -50,9 +55,14 @@ resource "aws_cloudwatch_metric_alarm" "volume_alarm" {
   threshold           = 0
   treat_missing_data  = "ignore"
   dimensions = {
-    QueueName = module.sfn_error_notification_context.id
+    QueueName = each.value.sqs_queue_name
   }
   alarm_actions = [var.volume_sns_topic_arn]
   ok_actions    = [var.volume_sns_topic_arn]
-  tags          = module.sfn_error_notification_context.tags
+  tags = merge(
+    module.sfn_error_notification_context.tags,
+    {
+      Name = "${each.value.name}-dlq-volume-alarm"
+    }
+  )
 }

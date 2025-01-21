@@ -58,7 +58,12 @@ module "xsf_log_to_eventbridge_lambda" {
     try(data.aws_iam_policy_document.xsf_log_to_eventbridge_lambda_policy[0].json, "")
   ]
 
-  tags = module.context.tags
+  tags = merge(
+    module.context.tags,
+    {
+      Name = local.lambda_name
+    }
+  )
 }
 
 # Add subscription filter for each Step Function

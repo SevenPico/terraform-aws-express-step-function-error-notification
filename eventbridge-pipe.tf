@@ -125,6 +125,6 @@ module "pipe_role" {
 
 resource "aws_cloudwatch_log_group" "pipe_log_group" {
   for_each          = module.pipe_context.enabled ? local.pipes : {}
-  name              = "/aws/vendedlogs/${each.value.name}-logs"
+  name              = "/aws/vendedlogs/${each.value.name}-pipe-logs"
   retention_in_days = var.cloudwatch_log_retention_days
 }

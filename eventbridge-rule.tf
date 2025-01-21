@@ -29,7 +29,12 @@ resource "aws_cloudwatch_event_rule" "eventbridge_rule" {
     }
   })
 
-  tags = module.sfn_error_notification_context.tags
+  tags = merge(
+    module.sfn_error_notification_context.tags,
+    {
+      Name = each.value.name
+    }
+  )
 }
 
 resource "aws_cloudwatch_event_target" "eventbridge_target" {

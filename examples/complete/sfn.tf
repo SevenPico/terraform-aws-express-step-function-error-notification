@@ -32,8 +32,13 @@ module "step_function" {
   step_function_name        = "${module.example_context.id}-${each.value.name}"
   tracing_enabled           = false
   type                      = "EXPRESS"
-  tags                      = module.example_context.tags
-  use_fullname              = true
+  tags = merge(
+    module.example_context.tags,
+    {
+      Name = "${module.example_context.id}-${each.value.name}"
+    }
+  )
+  use_fullname = true
 }
 
 data "aws_iam_policy_document" "example_step_function_policy_document" {
