@@ -63,12 +63,11 @@ export const handler = async (event) => {
 
       // Log each failed entry individually if debug is enabled
       if (debug) {
-        failedEntries.forEach((failedEntry, index) => {
-          const originalEntry = batch[index];
+        failedEntries.forEach((failedEntry) => {
+          const entryIndex = response.Entries.indexOf(failedEntry);
           console.error(
-            `Failed to send event ${i + index + 1}:`,
-            `Error: ${failedEntry.ErrorCode} - ${failedEntry.ErrorMessage}`,
-            `Event: ${JSON.stringify(originalEntry)}`
+            `Failed to send event ${i + entryIndex + 1}:`,
+            `Error: ${failedEntry.ErrorCode} - ${failedEntry.ErrorMessage}`
           );
         });
       }
@@ -80,13 +79,10 @@ export const handler = async (event) => {
 
     // Log successful entries if debug is enabled
     if (debug) {
-      const successfulEntries = response.Entries.filter(
-        (entry) => !entry.ErrorCode
-      );
-      successfulEntries.forEach((entry, index) => {
+      entries.forEach((entry, index) => {
         console.debug(
-          `Successfully sent event ${i + index + 1}:`,
-          JSON.stringify(batch[index])
+          `Successfully sent event ${index + 1}:`,
+          JSON.stringify(entry)
         );
       });
     }
