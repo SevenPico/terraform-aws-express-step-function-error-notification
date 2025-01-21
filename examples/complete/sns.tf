@@ -20,8 +20,8 @@ module "rate_alarm_alert_sns" {
   version = "2.0.2"
   context = module.example_rate_sns_context.self
 
-  pub_principals    = {}
-  sub_principals    = {}
+  pub_principals = {}
+  sub_principals = {}
 }
 
 module "volume_alarm_alert_sns" {
@@ -30,6 +30,6 @@ module "volume_alarm_alert_sns" {
   version = "2.0.2"
   context = module.example_volume_sns_context.self
 
-  pub_principals    = {}
-  sub_principals    = {}
+  pub_principals = {}
+  sub_principals = {}
 }

@@ -2,24 +2,27 @@
 module "example_step_function" {
   source     = "git::https://github.com/SevenPico/terraform-aws-step-functions.git?ref=hotfix/1.0.2"
   context    = module.example_context.self
-  attributes = ["example", "notification"]
+  attributes = []
 
-  definition = jsonencode({
-    StartAt: "PassState",
-    States: {
-      PassState: {
-        Type: "Pass",
-        End: true
+  definition = {
+    StartAt : "PassState",
+    States : {
+      PassState : {
+        Type : "Pass",
+        Next : "Fail"
+      }
+      Fail : {
+        Type : "Fail"
       }
     }
-  })
+  }
   cloudwatch_log_group_kms_key_id        = null
-  cloudwatch_log_group_name              = "/aws/vendedlogs/states/${module.example_context.id}-example-step-function"
+  cloudwatch_log_group_name              = "/aws/vendedlogs/states/${module.example_context.id}"
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_retention_days
 
   logging_configuration = {
     include_execution_data = true,
-    level                  = "ERROR"
+    level                  = "ALL"
   }
   policy_document_count     = 1
   policy_documents          = try([data.aws_iam_policy_document.example_step_function_policy_document[0].json], [])
@@ -28,7 +31,7 @@ module "example_step_function" {
   role_permissions_boundary = null
   step_function_name        = null
   tracing_enabled           = false
-  type                      = "STANDARD"
+  type                      = "EXPRESS"
   tags                      = module.example_context.tags
 }
 
