@@ -5,13 +5,18 @@ module "eventbridge_rule_context" {
 }
 
 locals {
-  eventbridge_rule_name = var.eventbridge_rule_name != null ? var.eventbridge_rule_name : "${module.eventbridge_rule_context.id}-err-rule"
+  eventbridge_rules = {
+    for id, sfn in var.step_functions : id => {
+      name = "${split(":stateMachine:", sfn.arn)[1]}-err-rule"
+      arn  = sfn.arn
+    }
+  }
 }
 
 resource "aws_cloudwatch_event_rule" "eventbridge_rule" {
-  count       = module.sfn_error_notification_context.enabled ? 1 : 0
-  name        = local.eventbridge_rule_name
-  description = "Eventbridge rule to route failure events to sqs."
+  for_each    = module.sfn_error_notification_context.enabled ? local.eventbridge_rules : {}
+  name        = each.value.name
+  description = "Eventbridge rule to route failure events to sqs for ${split(":stateMachine:", each.value.arn)[1]}"
 
   event_pattern = jsonencode({
     "source" : ["7π.states"],
@@ -19,7 +24,7 @@ resource "aws_cloudwatch_event_rule" "eventbridge_rule" {
     "detail" : {
       "type" : ["ExecutionFailed"],
       "execution_arn" : [{
-        "prefix" : "${split(":stateMachine:", var.step_function_arn)[0]}:express:${split(":stateMachine:", var.step_function_arn)[1]}:"
+        "prefix" : "${split(":stateMachine:", each.value.arn)[0]}:express:${split(":stateMachine:", each.value.arn)[1]}:"
       }]
     }
   })
@@ -28,17 +33,17 @@ resource "aws_cloudwatch_event_rule" "eventbridge_rule" {
 }
 
 resource "aws_cloudwatch_event_target" "eventbridge_target" {
-  count     = module.sfn_error_notification_context.enabled ? 1 : 0
-  rule      = try(aws_cloudwatch_event_rule.eventbridge_rule[0].name, "")
+  for_each  = module.sfn_error_notification_context.enabled ? local.eventbridge_rules : {}
+  rule      = aws_cloudwatch_event_rule.eventbridge_rule[each.key].name
   target_id = "send-failed-to-dlq"
-  arn       = try(aws_sqs_queue.dead_letter_queue[0].arn, "")
+  arn       = aws_sqs_queue.dead_letter_queue[each.key].arn
 }
 
 # rather than using a role attached to the target, we use an SQS queue policy to allow the eventbridge rule to send messages to the queue
 
 resource "aws_sqs_queue_policy" "analytics_cloudwatch_event_queue_policy" {
-  count     = module.sfn_error_notification_context.enabled ? 1 : 0
-  queue_url = aws_sqs_queue.dead_letter_queue[0].url
+  for_each  = module.sfn_error_notification_context.enabled ? var.step_functions : {}
+  queue_url = aws_sqs_queue.dead_letter_queue[each.key].url
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -50,11 +55,11 @@ resource "aws_sqs_queue_policy" "analytics_cloudwatch_event_queue_policy" {
         },
         Condition = {
           ArnEquals = {
-            "aws:SourceArn" : aws_cloudwatch_event_rule.eventbridge_rule[0].arn
+            "aws:SourceArn" : aws_cloudwatch_event_rule.eventbridge_rule[each.key].arn
           }
         },
         Action   = "sqs:SendMessage",
-        Resource = aws_sqs_queue.dead_letter_queue[0].arn
+        Resource = aws_sqs_queue.dead_letter_queue[each.key].arn
       }
     ]
   })

@@ -9,17 +9,25 @@ module "pipe_context" {
 }
 
 locals {
-  eventbridge_pipe_name = var.eventbridge_pipe_name != null ? var.eventbridge_pipe_name : "${module.pipe_context.id}-err-pipe"
+  pipes = {
+    for id, sfn in var.step_functions : id => {
+      name = coalesce(
+        var.eventbridge_pipe_name,
+        "${module.pipe_context.id}-${split(":stateMachine:", sfn.arn)[1]}-err-pipe"
+      )
+      arn = sfn.arn
+    }
+  }
 }
 
 resource "aws_pipes_pipe" "pipe" {
-  count = module.pipe_context.enabled ? 1 : 0
+  for_each = module.pipe_context.enabled ? local.pipes : {}
 
-  name          = local.eventbridge_pipe_name
-  role_arn      = try(module.pipe_role.arn, "")
-  source        = try(aws_sqs_queue.dead_letter_queue[0].arn, "")
+  name          = each.value.name
+  role_arn      = try(module.pipe_role[each.key].arn, "")
+  source        = aws_sqs_queue.dead_letter_queue[each.key].arn
   desired_state = "STOPPED"
-  target        = var.step_function_arn
+  target        = each.value.arn
 
   source_parameters {
     sqs_queue_parameters {
@@ -34,7 +42,7 @@ resource "aws_pipes_pipe" "pipe" {
   }
   log_configuration {
     cloudwatch_logs_log_destination {
-      log_group_arn = try(aws_cloudwatch_log_group.pipe_log_group[0].arn, "")
+      log_group_arn = aws_cloudwatch_log_group.pipe_log_group[each.key].arn
     }
     level = var.eventbridge_pipe_log_level
   }
@@ -42,7 +50,8 @@ resource "aws_pipes_pipe" "pipe" {
 }
 
 data "aws_iam_policy_document" "pipe_policy_document" {
-  count = module.pipe_context.enabled ? 1 : 0
+  for_each = module.pipe_context.enabled ? local.pipes : {}
+
   statement {
     sid = "SQSAccess"
     actions = [
@@ -52,13 +61,13 @@ data "aws_iam_policy_document" "pipe_policy_document" {
       "sqs:GetQueueUrl",
       "sqs:GetQueueAttributes"
     ]
-    resources = try([aws_sqs_queue.dead_letter_queue[0].arn], ["*"])
+    resources = [aws_sqs_queue.dead_letter_queue[each.key].arn]
   }
 
   statement {
     sid       = "StepFunctionExecutionAccess"
     actions   = ["states:StartExecution"]
-    resources = [var.step_function_arn]
+    resources = [each.value.arn]
   }
 
   statement {
@@ -69,11 +78,12 @@ data "aws_iam_policy_document" "pipe_policy_document" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = [aws_cloudwatch_log_group.pipe_log_group[0].arn]
+    resources = [aws_cloudwatch_log_group.pipe_log_group[each.key].arn]
   }
 }
 
 module "pipe_role" {
+  for_each   = module.pipe_context.enabled ? local.pipes : {}
   source     = "registry.terraform.io/SevenPicoForks/iam-role/aws"
   version    = "2.0.2"
   context    = module.pipe_context.self
@@ -85,7 +95,7 @@ module "pipe_role" {
       test     = "StringEquals"
       variable = "aws:SourceArn"
       values = [
-        "${local.arn_prefix}:pipes:${local.region}:${local.account_id}:pipe/${local.eventbridge_pipe_name}"
+        "${local.arn_prefix}:pipes:${local.region}:${local.account_id}:pipe/${each.value.name}"
       ]
     },
     {
@@ -108,13 +118,13 @@ module "pipe_role" {
   path                 = "/"
   permissions_boundary = ""
   policy_description   = "Policy for EventBridge Pipe Role"
-  policy_documents     = try([data.aws_iam_policy_document.pipe_policy_document[0].json], [])
+  policy_documents     = [data.aws_iam_policy_document.pipe_policy_document[each.key].json]
   role_description     = "Role for EventBridge Pipe"
   use_fullname         = true
 }
 
 resource "aws_cloudwatch_log_group" "pipe_log_group" {
-  count             = module.pipe_context.enabled ? 1 : 0
-  name              = "/aws/vendedlogs/${local.eventbridge_pipe_name}-logs"
+  for_each          = module.pipe_context.enabled ? local.pipes : {}
+  name              = "/aws/vendedlogs/${each.value.name}-logs"
   retention_in_days = var.cloudwatch_log_retention_days
 }

@@ -1,7 +1,7 @@
 resource "aws_cloudwatch_metric_alarm" "rate_alarm" {
   count             = module.sfn_error_notification_context.enabled ? 1 : 0
   depends_on        = [var.rate_sns_topic_arn]
-  alarm_name        = var.rate_alarm_name != null ? var.rate_alarm_name : "${module.sfn_error_notification_context.id}-rate"
+  alarm_name        = "${module.sfn_error_notification_context.id}-rate"
   alarm_description = "ALARM when the rate of growth for the ${module.sfn_error_notification_context.id} Dead Letter Queue exceeds the threshold"
 
   metric_query {
@@ -38,7 +38,7 @@ resource "aws_cloudwatch_metric_alarm" "volume_alarm" {
   count      = module.sfn_error_notification_context.enabled ? 1 : 0
   depends_on = [var.volume_sns_topic_arn]
 
-  alarm_name          = var.volume_alarm_name != null ? var.volume_alarm_name : "${module.sfn_error_notification_context.id}-volume"
+  alarm_name          = "${module.sfn_error_notification_context.id}-volume"
   alarm_description   = "ALARM when the ${module.sfn_error_notification_context.id} Dead Letter Queue has messages remaining to reprocess"
   metric_name         = "ApproximateNumberOfMessagesVisible"
   namespace           = "AWS/SQS"
