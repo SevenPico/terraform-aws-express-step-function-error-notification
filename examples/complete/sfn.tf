@@ -1,8 +1,8 @@
-
-module "example_step_function" {
+module "step_function" {
   source     = "git::https://github.com/SevenPico/terraform-aws-step-functions.git?ref=hotfix/1.0.2"
+  for_each   = local.step_functions
   context    = module.example_context.self
-  attributes = []
+  attributes = [each.value.name, "sfn"]
 
   definition = {
     StartAt : "PassState",
@@ -17,7 +17,7 @@ module "example_step_function" {
     }
   }
   cloudwatch_log_group_kms_key_id        = null
-  cloudwatch_log_group_name              = "/aws/vendedlogs/states/${module.example_context.id}"
+  cloudwatch_log_group_name              = "/aws/vendedlogs/states/${module.example_context.id}-${each.value.name}"
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_retention_days
 
   logging_configuration = {
@@ -29,12 +29,17 @@ module "example_step_function" {
   role_description          = "Example Step Function Permission role"
   role_path                 = "/"
   role_permissions_boundary = null
-  step_function_name        = null
+  step_function_name        = "${module.example_context.id}-${each.value.name}"
   tracing_enabled           = false
   type                      = "EXPRESS"
-  tags                      = module.example_context.tags
+  tags = merge(
+    module.example_context.tags,
+    {
+      Name = "${module.example_context.id}-${each.value.name}"
+    }
+  )
+  use_fullname = true
 }
-
 
 data "aws_iam_policy_document" "example_step_function_policy_document" {
   count = module.example_context.enabled ? 1 : 0
@@ -46,5 +51,11 @@ data "aws_iam_policy_document" "example_step_function_policy_document" {
       "logs:PutLogEvents"
     ]
     resources = ["*"]
+  }
+}
+
+output "state_machine_arn" {
+  value = {
+    for id, sfn in module.step_function : id => sfn.state_machine_arn
   }
 }

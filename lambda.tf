@@ -5,8 +5,7 @@ module "lambda_context" {
 }
 
 locals {
-  lambda_name        = "xsf-log-to-eventbridge"
-  step_function_name = try(split(":stateMachine:", var.step_function_arn)[1], "")
+  lambda_name = "xsf-log-to-eventbridge"
 }
 
 #------------------------------------------------------------------------------
@@ -46,7 +45,6 @@ module "xsf_log_to_eventbridge_lambda" {
   memory_size   = 128
   publish       = false
 
-  # Update to use the zipped file
   filename         = data.archive_file.lambda_zip[0].output_path
   source_code_hash = data.archive_file.lambda_zip[0].output_base64sha256
 
@@ -60,31 +58,29 @@ module "xsf_log_to_eventbridge_lambda" {
     try(data.aws_iam_policy_document.xsf_log_to_eventbridge_lambda_policy[0].json, "")
   ]
 
-  tags = module.context.tags
+  tags = merge(
+    module.context.tags,
+    {
+      Name = local.lambda_name
+    }
+  )
 }
 
-
-# Reference to the Step Function log group
-data "aws_cloudwatch_log_group" "step_function" {
-  count = module.lambda_context.enabled ? 1 : 0
-  name  = "/aws/vendedlogs/states/${local.step_function_name}"
-}
-
-# Add the standalone resource
+# Add subscription filter for each Step Function
 resource "aws_cloudwatch_log_subscription_filter" "xsf_failures" {
-  count           = module.lambda_context.enabled ? 1 : 0
-  name            = "xsf-failures-to-eventbridge"
-  log_group_name  = try(data.aws_cloudwatch_log_group.step_function[0].name, "")
+  for_each        = module.lambda_context.enabled ? local.step_functions : {}
+  name            = "xsf-failures-to-eventbridge-${each.value.name}"
+  log_group_name  = "/aws/vendedlogs/states/${each.value.name}"
   filter_pattern  = "{ $.type = \"ExecutionFailed\" }"
-  destination_arn = try(module.xsf_log_to_eventbridge_lambda[0].arn, "")
+  destination_arn = module.xsf_log_to_eventbridge_lambda[0].arn
 }
 
-# Add Lambda permission for CloudWatch Logs
+# Update Lambda permission to allow all Step Function log groups
 resource "aws_lambda_permission" "cloudwatch_logs" {
-  count         = module.lambda_context.enabled ? 1 : 0
-  statement_id  = "CloudWatchLogsAllowLambdaInvokeFunction"
+  for_each      = module.lambda_context.enabled ? local.step_functions : {}
+  statement_id  = "CloudWatchLogsAllowLambdaInvokeFunction-${each.value.name}"
   action        = "lambda:InvokeFunction"
-  function_name = try(module.xsf_log_to_eventbridge_lambda[0].function_name, "")
-  principal     = try("logs.${data.aws_region.current[0].name}.amazonaws.com", "")
-  source_arn    = try("${data.aws_cloudwatch_log_group.step_function[0].arn}:*", "")
+  function_name = module.xsf_log_to_eventbridge_lambda[0].function_name
+  principal     = "logs.${data.aws_region.current[0].name}.amazonaws.com"
+  source_arn    = "arn:aws:logs:${data.aws_region.current[0].name}:${data.aws_caller_identity.current[0].account_id}:log-group:/aws/vendedlogs/states/${each.value.name}:*"
 }

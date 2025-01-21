@@ -35,3 +35,6 @@ node_modules/
 
 generated-backend.tf
 generated-providers.tf
+
+# Ignore generated Lambda zip files
+**/lambdas/**/*.zip

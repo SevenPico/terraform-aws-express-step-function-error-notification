@@ -1,6 +1,13 @@
-variable "step_function_arn" {
-  description = "The ARN of the Step Function to monitor."
-  type        = string
+variable "step_functions" {
+  description = "Map of Express Step Functions to monitor"
+  type = map(object({
+    arn = string
+    // Optional overrides for each step function
+    sqs_queue_name        = optional(string)
+    rate_alarm_name       = optional(string)
+    volume_alarm_name     = optional(string)
+    eventbridge_rule_name = optional(string)
+  }))
 }
 
 variable "rate_sns_topic_arn" {
@@ -11,12 +18,6 @@ variable "rate_sns_topic_arn" {
 variable "volume_sns_topic_arn" {
   description = "ARN of the SNS topic for volume alarm notifications."
   type        = string
-}
-
-variable "sqs_queue_name" {
-  description = "(Optional) Name of the SQS Dead Letter Queue to hold failed execution messages."
-  type        = string
-  default     = null
 }
 
 variable "sqs_kms_key_id" {
@@ -35,12 +36,6 @@ variable "sqs_visibility_timeout_seconds" {
   description = "(Optional) SQS visibility timeout in seconds."
   type        = number
   default     = 30
-}
-
-variable "eventbridge_rule_name" {
-  description = "(Optional) Name of the EventBridge Rule."
-  type        = string
-  default     = null
 }
 
 variable "alarms_period" {
@@ -93,18 +88,6 @@ variable "target_step_function_input_template" {
 
 variable "sns_kms_key_id" {
   description = "(Optional) Managed key for encryption at rest. Defaults to null."
-  type        = string
-  default     = null
-}
-
-variable "rate_alarm_name" {
-  description = "(Optional) Name of the rate alarm. Defaults to null."
-  type        = string
-  default     = null
-}
-
-variable "volume_alarm_name" {
-  description = "(Optional) Name of the volume alarm. Defaults to null."
   type        = string
   default     = null
 }

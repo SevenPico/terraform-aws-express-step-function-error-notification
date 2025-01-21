@@ -19,27 +19,44 @@
 ##  This file contains code written only by SevenPico, Inc.
 ## ----------------------------------------------------------------------------
 
-output "sqs_dead_letter_queue_arn" {
-  description = "ARN of the SQS Dead Letter Queue."
-  value       = try(aws_sqs_queue.dead_letter_queue[0].arn, "")
+output "step_function_arns" {
+  description = "Map of Step Function IDs to their ARNs"
+  value = {
+    for id, sfn in var.step_functions :
+    id => sfn.arn
+  }
 }
 
-output "cloudwatch_rate_alarm_name" {
-  description = "Name of the CloudWatch Rate Alarm."
-  value       = try(aws_cloudwatch_metric_alarm.rate_alarm[0].alarm_name, "")
+output "sqs_dead_letter_queue_arns" {
+  description = "Map of Step Function IDs to their corresponding Dead Letter Queue ARNs"
+  value = {
+    for id, _ in var.step_functions :
+    id => try(aws_sqs_queue.dead_letter_queue[id].arn, "")
+  }
 }
 
-output "cloudwatch_volume_alarm_name" {
-  description = "Name of the CloudWatch Volume Alarm."
-  value       = try(aws_cloudwatch_metric_alarm.volume_alarm[0].alarm_name, "")
+output "cloudwatch_rate_alarm_names" {
+  description = "Map of Step Function IDs to their corresponding CloudWatch Dead Letter Queue Rate Alarm names"
+  value = {
+    for id, _ in var.step_functions :
+    id => try(aws_cloudwatch_metric_alarm.rate_alarm[id].alarm_name, "")
+  }
 }
 
-output "eventbridge_pipe_name" {
-  description = "Name of the re-execution EventBridge Pipe."
-  value       = try(aws_pipes_pipe.pipe[0].name, "")
+output "cloudwatch_volume_alarm_names" {
+  description = "Map of Step Function IDs to their corresponding CloudWatch Dead Letter Queue Volume Alarm names"
+  value = {
+    for id, _ in var.step_functions :
+    id => try(aws_cloudwatch_metric_alarm.volume_alarm[id].alarm_name, "")
+  }
 }
 
-output "eventbridge_pipe_arn" {
-  description = "ARN of the re-execution EventBridge Pipe."
-  value       = try(aws_pipes_pipe.pipe[0].arn, "")
-}
+# output "eventbridge_pipe_name" {
+#   description = "Name of the re-execution EventBridge Pipe."
+#   value       = try(aws_pipes_pipe.pipe[0].name, "")
+# }
+
+# output "eventbridge_pipe_arn" {
+#   description = "ARN of the re-execution EventBridge Pipe."
+#   value       = try(aws_pipes_pipe.pipe[0].arn, "")
+# }
