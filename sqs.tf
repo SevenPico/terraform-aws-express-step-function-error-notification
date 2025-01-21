@@ -9,11 +9,48 @@ resource "aws_sqs_queue" "dead_letter_queue" {
   name                       = local.step_functions[each.key].sqs_queue_name
   message_retention_seconds  = var.sqs_message_retention_seconds
   visibility_timeout_seconds = var.sqs_visibility_timeout_seconds
-  kms_master_key_id          = var.sqs_kms_key_id
+  kms_master_key_id          = try(var.kms_key_config.key_id, null)
   tags = merge(
     module.sfn_error_notification_context.tags,
     {
       Name = local.step_functions[each.key].sqs_queue_name
     }
   )
+}
+
+# Add KMS permissions to queue policy if KMS key is provided
+resource "aws_sqs_queue_policy" "kms_queue_policy" {
+  for_each  = module.sfn_error_notification_context.enabled && var.kms_key_config != null ? var.step_functions : {}
+  queue_url = aws_sqs_queue.dead_letter_queue[each.key].url
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = try(var.kms_key_config.policy_id, "${local.step_functions[each.key].sqs_queue_name}-kms-policy")
+    Statement = [
+      # Existing EventBridge permissions
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "events.amazonaws.com"
+        }
+        Action   = "sqs:SendMessage"
+        Resource = aws_sqs_queue.dead_letter_queue[each.key].arn
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_cloudwatch_event_rule.eventbridge_rule[each.key].arn
+          }
+        }
+      },
+      # KMS decrypt permissions
+      {
+        Sid    = "KmsPermissions"
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = var.kms_key_config.key_arn
+      }
+    ]
+  })
 }
