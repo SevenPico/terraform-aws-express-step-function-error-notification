@@ -59,6 +59,57 @@ This module creates a single instance of the Lambda function which is shared acr
 
 see [example](./examples/complete.main.tf) for a complete example.
 
+## Inputs / Variables
+
+| Name                                | Description                                                             | Type                                                                                                | Default              | Required |
+| ----------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------- | :------: |
+| step_functions                      | Map of Express Step Functions to monitor                                | `map(object({...}))`                                                                                | n/a                  |   yes    |
+| rate_sns_topic_arn                  | ARN of the SNS topic for rate alarm notifications                       | `string`                                                                                            | n/a                  |   yes    |
+| volume_sns_topic_arn                | ARN of the SNS topic for volume alarm notifications                     | `string`                                                                                            | n/a                  |   yes    |
+| kms_key_config                      | Optional KMS key configuration for encryption                           | <pre>object({<br> key_id = string<br> key_arn = string<br> policy_id = optional(string)<br>})</pre> | `null`               |    no    |
+| sqs_message_retention_seconds       | SQS message retention period in seconds                                 | `number`                                                                                            | `604800`             |    no    |
+| sqs_visibility_timeout_seconds      | SQS visibility timeout in seconds                                       | `number`                                                                                            | `30`                 |    no    |
+| alarms_period                       | Period in seconds for CloudWatch alarms                                 | `number`                                                                                            | `60`                 |    no    |
+| alarms_datapoints_to_alarm          | Number of data points that must breach to trigger the alarm             | `number`                                                                                            | `2`                  |    no    |
+| alarms_evaluation_periods           | Number of periods over which data is compared to the threshold          | `number`                                                                                            | `2`                  |    no    |
+| eventbridge_pipe_name               | The name of the Pipe                                                    | `string`                                                                                            | `null`               |    no    |
+| eventbridge_pipe_batch_size         | Batch size for EventBridge Pipe processing                              | `number`                                                                                            | `1`                  |    no    |
+| eventbridge_pipe_log_level          | Logging level for EventBridge Pipe                                      | `string`                                                                                            | `"ERROR"`            |    no    |
+| cloudwatch_log_retention_days       | Number of days to retain logs in CloudWatch                             | `number`                                                                                            | `90`                 |    no    |
+| target_step_function_input_template | Template to prepare dead letter messages for step function re-execution | `string`                                                                                            | `"<$.detail.input>"` |    no    |
+| sns_kms_key_id                      | Managed key for SNS encryption at rest                                  | `string`                                                                                            | `null`               |    no    |
+
+### step_functions Object Structure
+
+```hcl
+map(object({
+  arn                   = string
+  sqs_queue_name        = optional(string)
+  rate_alarm_name       = optional(string)
+  volume_alarm_name     = optional(string)
+  eventbridge_rule_name = optional(string)
+}))
+```
+
+### kms_key_config Object Structure
+
+```hcl
+object({
+  key_id    = string    # KMS key ID
+  key_arn   = string    # KMS key ARN
+  policy_id = string    # Optional policy ID for SQS queue policy
+})
+```
+
+## KMS Encryption
+
+This module supports optional KMS encryption for the following components:
+
+- SQS Dead Letter Queues
+- EventBridge Rules that publish to the Dead Letter Queues
+
+To enable KMS encryption, provide a KMS key configuration `kms_key_config` object.
+
 ## License
 
 This project is licensed under the MIT License.
