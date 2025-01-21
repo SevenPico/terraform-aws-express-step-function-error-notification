@@ -2,7 +2,7 @@
 module "example_step_function" {
   source     = "git::https://github.com/SevenPico/terraform-aws-step-functions.git?ref=hotfix/1.0.2"
   context    = module.example_context.self
-  attributes = ["example", "notification"]
+  attributes = []
 
   definition = {
     StartAt : "PassState",
@@ -14,7 +14,7 @@ module "example_step_function" {
     }
   }
   cloudwatch_log_group_kms_key_id        = null
-  cloudwatch_log_group_name              = "/aws/vendedlogs/states/${module.example_context.id}-example-step-function"
+  cloudwatch_log_group_name              = "/aws/vendedlogs/states/${module.example_context.id}"
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_retention_days
 
   logging_configuration = {

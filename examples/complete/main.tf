@@ -11,7 +11,7 @@ module "express_sfn_error_notifications" {
   context    = module.example_context.self
   attributes = ["example"]
 
-  state_machine_arn    = module.example_step_function.state_machine_arn
+  step_function_arn    = module.example_step_function.state_machine_arn
   rate_sns_topic_arn   = module.example_sns.topic_arn
   volume_sns_topic_arn = module.example_sns.topic_arn
 }

@@ -1,4 +1,4 @@
-variable "state_machine_arn" {
+variable "step_function_arn" {
   description = "The ARN of the Step Function to monitor."
   type        = string
 }

@@ -18,7 +18,7 @@ resource "aws_cloudwatch_event_rule" "eventbridge_rule" {
     "detail" : {
       "status" : ["ExecutionFailed"],
       "execution_arn" : [{
-        "prefix" : "${split(":stateMachine:", var.state_machine_arn)[0]}:express:${split(":stateMachine:", var.state_machine_arn)[1]}:"
+        "prefix" : "${split(":stateMachine:", var.step_function_arn)[0]}:express:${split(":stateMachine:", var.step_function_arn)[1]}:"
       }]
     }
   })

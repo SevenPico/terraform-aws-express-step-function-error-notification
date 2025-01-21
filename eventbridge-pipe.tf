@@ -17,7 +17,7 @@ resource "aws_pipes_pipe" "pipe" {
   role_arn      = try(module.pipe_role.arn, "")
   source        = try(aws_sqs_queue.dead_letter_queue[0].arn, "")
   desired_state = "STOPPED"
-  target        = var.state_machine_arn
+  target        = var.step_function_arn
 
   source_parameters {
     sqs_queue_parameters {
@@ -56,7 +56,7 @@ data "aws_iam_policy_document" "pipe_policy_document" {
   statement {
     sid       = "StepFunctionExecutionAccess"
     actions   = ["states:StartExecution"]
-    resources = [var.state_machine_arn]
+    resources = [var.step_function_arn]
   }
 
   statement {
