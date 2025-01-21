@@ -16,7 +16,7 @@ resource "aws_cloudwatch_event_rule" "eventbridge_rule" {
     "source" : ["7π.states"],
     "detail-type" : ["Express Step Functions Execution Status Change"],
     "detail" : {
-      "status" : ["ExecutionFailed"],
+      "type" : ["ExecutionFailed"],
       "execution_arn" : [{
         "prefix" : "${split(":stateMachine:", var.step_function_arn)[0]}:express:${split(":stateMachine:", var.step_function_arn)[1]}:"
       }]

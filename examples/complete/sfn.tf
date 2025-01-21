@@ -9,7 +9,10 @@ module "example_step_function" {
     States : {
       PassState : {
         Type : "Pass",
-        End : true
+        Next : "Fail"
+      }
+      Fail : {
+        Type : "Fail"
       }
     }
   }

@@ -3,6 +3,8 @@ module "pipe_context" {
   version = "2.0.0"
   context = module.sfn_error_notification_context.self
 
+  # hard-code enabled to false for now as a pending feature flag
+  enabled    = false
   attributes = []
 }
 

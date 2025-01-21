@@ -34,7 +34,7 @@ variable "sqs_message_retention_seconds" {
 variable "sqs_visibility_timeout_seconds" {
   description = "(Optional) SQS visibility timeout in seconds."
   type        = number
-  default     = 2
+  default     = 30
 }
 
 variable "eventbridge_rule_name" {
