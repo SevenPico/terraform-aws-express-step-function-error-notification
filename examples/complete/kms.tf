@@ -1,5 +1,5 @@
 # KMS Key for SQS encryption
-resource "aws_kms_key" "sqs_key" {
+resource "aws_kms_key" "kms_key" {
   count                  = module.context.enabled ? 1 : 0
   description             = "KMS key for SQS queue encryption"
   deletion_window_in_days = 7
@@ -27,7 +27,12 @@ resource "aws_kms_key" "sqs_key" {
           "kms:Decrypt",
           "kms:GenerateDataKey"
         ]
-        Resource = "*"
+        Resource = ["arn:aws:kms:${local.region}:${local.account_id}:key/*"]
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = local.account_id
+          }
+        }
       }
     ]
   })
@@ -35,8 +40,8 @@ resource "aws_kms_key" "sqs_key" {
   tags = module.context.tags
 }
 
-resource "aws_kms_alias" "sqs_key_alias" {
+resource "aws_kms_alias" "kms_key_alias" {
   count         = module.context.enabled ? 1 : 0
-  name          = "alias/${module.context.id}-sqs-key"
-  target_key_id = aws_kms_key.sqs_key[0].key_id
+  name          = "alias/${module.context.id}-kms-key"
+  target_key_id = aws_kms_key.kms_key[0].key_id
 } 
