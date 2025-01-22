@@ -7,9 +7,9 @@ module "sfn_error_notification_context" {
 locals {
   step_functions = {
     for id, sfn in var.step_functions : id => {
-      name           = split(":stateMachine:", sfn.arn)[1]
+      name           = local.enabled ? split(":stateMachine:", sfn.arn)[1] : ""
       arn            = sfn.arn
-      sqs_queue_name = "${split(":stateMachine:", sfn.arn)[1]}-dlq"
+      sqs_queue_name = local.enabled ? "${split(":stateMachine:", sfn.arn)[1]}-dlq" : ""
     }
   }
 }

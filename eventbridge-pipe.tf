@@ -11,10 +11,10 @@ module "pipe_context" {
 locals {
   pipes = {
     for id, sfn in var.step_functions : id => {
-      name = coalesce(
+      name = local.enabled ? coalesce(
         var.eventbridge_pipe_name,
         "${module.pipe_context.id}-${split(":stateMachine:", sfn.arn)[1]}-err-pipe"
-      )
+      ) : ""
       arn = sfn.arn
     }
   }

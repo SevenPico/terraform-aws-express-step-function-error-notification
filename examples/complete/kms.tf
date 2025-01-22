@@ -1,5 +1,6 @@
 # KMS Key for SQS encryption
 resource "aws_kms_key" "sqs_key" {
+  count                  = module.context.enabled ? 1 : 0
   description             = "KMS key for SQS queue encryption"
   deletion_window_in_days = 7
   enable_key_rotation     = true
@@ -35,6 +36,7 @@ resource "aws_kms_key" "sqs_key" {
 }
 
 resource "aws_kms_alias" "sqs_key_alias" {
+  count         = module.context.enabled ? 1 : 0
   name          = "alias/${module.context.id}-sqs-key"
-  target_key_id = aws_kms_key.sqs_key.key_id
+  target_key_id = aws_kms_key.sqs_key[0].key_id
 } 

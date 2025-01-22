@@ -18,16 +18,15 @@ resource "aws_sqs_queue" "dead_letter_queue" {
   )
 }
 
-# Add KMS permissions to queue policy if KMS key is provided
-resource "aws_sqs_queue_policy" "kms_queue_policy" {
-  for_each  = module.sfn_error_notification_context.enabled && var.kms_key_config != null ? var.step_functions : {}
+
+resource "aws_sqs_queue_policy" "queue_policy" {
+  for_each  = module.sfn_error_notification_context.enabled ? var.step_functions : {}
   queue_url = aws_sqs_queue.dead_letter_queue[each.key].url
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Id      = try(var.kms_key_config.policy_id, "${local.step_functions[each.key].sqs_queue_name}-kms-policy")
-    Statement = [
-      # Existing EventBridge permissions
+    Id      = "${local.step_functions[each.key].sqs_queue_name}-policy"
+    Statement = concat([
       {
         Effect = "Allow"
         Principal = {
@@ -40,9 +39,8 @@ resource "aws_sqs_queue_policy" "kms_queue_policy" {
             "aws:SourceArn" = aws_cloudwatch_event_rule.eventbridge_rule[each.key].arn
           }
         }
-      },
-      # KMS decrypt permissions
-      {
+      }],
+      var.kms_key_config != null ? [{
         Sid    = "KmsPermissions"
         Effect = "Allow"
         Action = [
@@ -50,7 +48,7 @@ resource "aws_sqs_queue_policy" "kms_queue_policy" {
           "kms:GenerateDataKey"
         ]
         Resource = var.kms_key_config.key_arn
-      }
-    ]
+      }] : []
+    )
   })
 }
