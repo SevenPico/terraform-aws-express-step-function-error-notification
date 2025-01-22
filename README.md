@@ -10,8 +10,6 @@ This module sets up an error handling and notification system for AWS **Express*
 flowchart TD
     ESF[Express Step Function] -->|Execution Error| EBR[EventBridge Rule]
     EBR -->|Routes Errors| DLQ[Dead Letter Queue<br/>SQS]
-    <!-- DLQ -->|Reprocess| EBP[EventBridge Pipe] -->
-    <!-- EBP -->|Reprocess| ESF -->
     DLQ -->|Rate Alarm| CWR[CloudWatch Alarm<br/>Rate-based]
     DLQ -->|Volume Alarm| CWV[CloudWatch Alarm<br/>Volume-based]
     CWR -->|Notifications| SNS1[Rate Alert<br/>SNS Topic]
