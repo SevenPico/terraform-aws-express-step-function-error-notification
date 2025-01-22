@@ -8,10 +8,10 @@ This module sets up an error handling and notification system for AWS **Express*
 
 ```mermaid
 flowchart TD
-    ESF[Express Step Function] -->|Execution Error| EBR[EventBridge Rule]
+    ESF[Express Step Function] -->|Logs| LOG[CloudWatch Log Group <br/>Subscription Filter]
+    LOG -->|Triggers| λ[Lambda Function]
+    λ -->|Publishes| EBR[EventBridge Rule]
     EBR -->|Routes Errors| DLQ[Dead Letter Queue<br/>SQS]
-    <!-- DLQ -->|Reprocess| EBP[EventBridge Pipe] -->
-    <!-- EBP -->|Reprocess| ESF -->
     DLQ -->|Rate Alarm| CWR[CloudWatch Alarm<br/>Rate-based]
     DLQ -->|Volume Alarm| CWV[CloudWatch Alarm<br/>Volume-based]
     CWR -->|Notifications| SNS1[Rate Alert<br/>SNS Topic]
@@ -61,23 +61,23 @@ see [example](./examples/complete.main.tf) for a complete example.
 
 ## Inputs / Variables
 
-| Name                                | Description                                                             | Type                                                                                                | Default              | Required |
-| ----------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------- | :------: |
-| step_functions                      | Map of Express Step Functions to monitor                                | `map(object({...}))`                                                                                | n/a                  |   yes    |
-| rate_sns_topic_arn                  | ARN of the SNS topic for rate alarm notifications                       | `string`                                                                                            | n/a                  |   yes    |
-| volume_sns_topic_arn                | ARN of the SNS topic for volume alarm notifications                     | `string`                                                                                            | n/a                  |   yes    |
-| kms_key_config                      | Optional KMS key configuration for encryption                           | <pre>object({<br> key_id = string<br> key_arn = string<br> policy_id = optional(string)<br>})</pre> | `null`               |    no    |
-| sqs_message_retention_seconds       | SQS message retention period in seconds                                 | `number`                                                                                            | `604800`             |    no    |
-| sqs_visibility_timeout_seconds      | SQS visibility timeout in seconds                                       | `number`                                                                                            | `30`                 |    no    |
-| alarms_period                       | Period in seconds for CloudWatch alarms                                 | `number`                                                                                            | `60`                 |    no    |
-| alarms_datapoints_to_alarm          | Number of data points that must breach to trigger the alarm             | `number`                                                                                            | `2`                  |    no    |
-| alarms_evaluation_periods           | Number of periods over which data is compared to the threshold          | `number`                                                                                            | `2`                  |    no    |
-| eventbridge_pipe_name               | The name of the Pipe                                                    | `string`                                                                                            | `null`               |    no    |
-| eventbridge_pipe_batch_size         | Batch size for EventBridge Pipe processing                              | `number`                                                                                            | `1`                  |    no    |
-| eventbridge_pipe_log_level          | Logging level for EventBridge Pipe                                      | `string`                                                                                            | `"ERROR"`            |    no    |
-| cloudwatch_log_retention_days       | Number of days to retain logs in CloudWatch                             | `number`                                                                                            | `90`                 |    no    |
-| target_step_function_input_template | Template to prepare dead letter messages for step function re-execution | `string`                                                                                            | `"<$.detail.input>"` |    no    |
-| sns_kms_key_id                      | Managed key for SNS encryption at rest                                  | `string`                                                                                            | `null`               |    no    |
+| Name                                | Description                                                                                           | Type                                                                                                | Default              | Required |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------- | :------: |
+| step_functions                      | Map of Express Step Functions to monitor                                                              | `map(object({...}))`                                                                                | n/a                  |   yes    |
+| rate_sns_topic_arn                  | ARN of the SNS topic for rate alarm notifications                                                     | `string`                                                                                            | n/a                  |   yes    |
+| volume_sns_topic_arn                | ARN of the SNS topic for volume alarm notifications                                                   | `string`                                                                                            | n/a                  |   yes    |
+| kms_key_config                      | Optional KMS key configuration for encryption. If not provided, default AWS managed keys will be used | <pre>object({<br> key_id = string<br> key_arn = string<br> policy_id = optional(string)<br>})</pre> | `null`               |    no    |
+| sqs_message_retention_seconds       | SQS message retention period in seconds                                                               | `number`                                                                                            | `604800`             |    no    |
+| sqs_visibility_timeout_seconds      | SQS visibility timeout in seconds                                                                     | `number`                                                                                            | `30`                 |    no    |
+| alarms_period                       | Period in seconds for CloudWatch alarms                                                               | `number`                                                                                            | `60`                 |    no    |
+| alarms_datapoints_to_alarm          | Number of data points that must breach to trigger the alarm                                           | `number`                                                                                            | `2`                  |    no    |
+| alarms_evaluation_periods           | Number of periods over which data is compared to the threshold                                        | `number`                                                                                            | `2`                  |    no    |
+| eventbridge_pipe_name               | The name of the Pipe                                                                                  | `string`                                                                                            | `null`               |    no    |
+| eventbridge_pipe_batch_size         | Batch size for EventBridge Pipe processing                                                            | `number`                                                                                            | `1`                  |    no    |
+| eventbridge_pipe_log_level          | Logging level for EventBridge Pipe                                                                    | `string`                                                                                            | `"ERROR"`            |    no    |
+| cloudwatch_log_retention_days       | Number of days to retain logs in CloudWatch                                                           | `number`                                                                                            | `90`                 |    no    |
+| target_step_function_input_template | Template to prepare dead letter messages for step function re-execution                               | `string`                                                                                            | `"<$.detail.input>"` |    no    |
+| sns_kms_key_id                      | Managed key for SNS encryption at rest                                                                | `string`                                                                                            | `null`               |    no    |
 
 ### step_functions Object Structure
 
@@ -108,7 +108,23 @@ This module supports optional KMS encryption for the following components:
 - SQS Dead Letter Queues
 - EventBridge Rules that publish to the Dead Letter Queues
 
-To enable KMS encryption, provide a KMS key configuration `kms_key_config` object.
+To enable KMS encryption, provide a KMS key configuration `kms_key_config` object with facts from an already deployed KMS key. This key will be used for encryption of this module's resources.
+
+## Roadmap
+
+### v0.1.0
+
+- [x] Support multiple Express Step Functions
+- [x] Add KMS encryption for SQS Dead Letter Queues
+- [x] Execution ID in dead letter queue messages
+- [x] Alarm and Notify when dead letter queue volume is above zero
+- [x] Alarm and Notify when dead letter queue rate is recently above zero
+
+### v1.0.0
+
+- [ ] Update Lambda function to associate execution inputs with the failed execution
+- [ ] Send execution inputs in dead letter queue messages
+- [ ] Add EventBridge Pipe to allow operators to turn on/off dead letter queue reprocessing
 
 ## License
 
