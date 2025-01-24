@@ -10,7 +10,7 @@ This module sets up an error handling and notification system for AWS **Express*
 flowchart TD
     ESF[Express Step Function] -->|Logs| LOG[CloudWatch Log Group <br/>Subscription Filter]
     LOG -->|Triggers| λ[Lambda Function]
-    λ -->|Publishes| EBR[EventBridge Rule]
+    λ -->|Publishes Event| EBR[EventBridge Rule]
     EBR -->|Routes Errors| DLQ[Dead Letter Queue<br/>SQS]
     DLQ -->|Rate Alarm| CWR[CloudWatch Alarm<br/>Rate-based]
     DLQ -->|Volume Alarm| CWV[CloudWatch Alarm<br/>Volume-based]
@@ -122,9 +122,9 @@ To enable KMS encryption, provide a KMS key configuration `kms_key_config` objec
 
 ### v1.0.0
 
-- [ ] Update Lambda function to associate execution inputs with the failed execution
+- [ ] Lambda function associates execution inputs with the failed execution
 - [ ] Send execution inputs in dead letter queue messages
-- [ ] Add EventBridge Pipe to allow operators to turn on/off dead letter queue reprocessing
+- [ ] EventBridge Pipe allows operators to turn on/off dead letter queue reprocessing
 
 ## License
 
