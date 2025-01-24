@@ -1,18 +1,23 @@
-variable "state_machine_arn" {
-  description = "The ARN of the Step Function to monitor."
+variable "step_functions" {
+  description = "Map of Express Step Functions to monitor"
+  type = map(object({
+    arn = string
+    // Optional overrides for each step function
+    sqs_queue_name        = optional(string)
+    rate_alarm_name       = optional(string)
+    volume_alarm_name     = optional(string)
+    eventbridge_rule_name = optional(string)
+  }))
+}
+
+variable "rate_sns_topic_arn" {
+  description = "ARN of the SNS topic for rate alarm notifications."
   type        = string
 }
 
-variable "sqs_kms_key_id" {
-  description = "(Optional) Managed key for encryption at rest."
+variable "volume_sns_topic_arn" {
+  description = "ARN of the SNS topic for volume alarm notifications."
   type        = string
-  default     = null
-}
-
-variable "sqs_queue_name" {
-  description = "(Optional) Name of the SQS Dead Letter Queue."
-  type        = string
-  default     = null
 }
 
 variable "sqs_message_retention_seconds" {
@@ -24,13 +29,7 @@ variable "sqs_message_retention_seconds" {
 variable "sqs_visibility_timeout_seconds" {
   description = "(Optional) SQS visibility timeout in seconds."
   type        = number
-  default     = 2
-}
-
-variable "eventbridge_rule_name" {
-  description = "(Optional) Name of the EventBridge Rule."
-  type        = string
-  default     = null
+  default     = 30
 }
 
 variable "alarms_period" {
@@ -70,26 +69,15 @@ variable "eventbridge_pipe_log_level" {
 }
 
 variable "cloudwatch_log_retention_days" {
-  description = "The number of days to retain logs in AWS CloudWatch before they are automatically deleted."
+  description = "(Optional) The number of days to retain logs in AWS CloudWatch before they are automatically deleted."
   type        = number
   default     = 90
 }
 
 variable "target_step_function_input_template" {
-  description = "(Optional) The event transformation template for step function."
+  description = "(Optional) The transformation template to prepare dead letter messages to be sent as step function re-execution input."
   type        = string
   default     = "<$.detail.input>"
-}
-
-
-variable "rate_sns_topic_arn" {
-  description = "ARN of the SNS topic for rate alarm notifications. Defaults to an empty string."
-  type        = string
-}
-
-variable "volume_sns_topic_arn" {
-  description = "ARN of the SNS topic for volume alarm notifications. Defaults to an empty string."
-  type        = string
 }
 
 variable "sns_kms_key_id" {
@@ -98,14 +86,12 @@ variable "sns_kms_key_id" {
   default     = null
 }
 
-variable "rate_alarm_name" {
-  description = "(Optional) Name of the rate alarm. Defaults to null."
-  type        = string
-  default     = null
-}
-
-variable "volume_alarm_name" {
-  description = "(Optional) Name of the volume alarm. Defaults to null."
-  type        = string
-  default     = null
+variable "kms_key_config" {
+  description = "Optional KMS key configuration for encryption. If not provided, default AWS managed keys will be used."
+  type = object({
+    key_id    = string
+    key_arn   = string
+    policy_id = optional(string)
+  })
+  default = null
 }

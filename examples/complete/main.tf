@@ -2,27 +2,42 @@ module "example_context" {
   source     = "registry.terraform.io/SevenPico/context/null"
   version    = "2.0.0"
   context    = module.context.self
-  attributes = ["example", "sfn"]
+  attributes = ["example"]
+  enabled    = module.context.enabled
 }
 
-module "async_sfn_error_notifications" {
+locals {
+  step_functions = {
+    one = {
+      name = "one"
+    }
+    two = {
+      name = "two"
+    }
+    three = {
+      name = "three"
+    }
+  }
+}
+
+module "express_sfn_error_notifications" {
   source     = "../../"
   context    = module.example_context.self
-  attributes = ["example", "sfn"]
+  attributes = ["example"]
 
-  state_machine_arn    = module.example_step_function.state_machine_arn
-  rate_sns_topic_arn   = module.example_sns.topic_arn
-  volume_sns_topic_arn = module.example_sns.topic_arn
-}
+  step_functions = module.context.enabled ? {
+    for id, sfn in module.step_function : id => {
+      arn = sfn.state_machine_arn
+    }
+  } : {}
 
+  rate_sns_topic_arn   = try(module.rate_alarm_alert_sns[0].topic_arn, "")
+  volume_sns_topic_arn = try(module.volume_alarm_alert_sns[0].topic_arn, "")
 
-module "example_sns" {
-  source     = "SevenPico/sns/aws"
-  version    = "2.0.2"
-  context    = module.example_context.self
-  attributes = ["example", "sns"]
-
-  pub_principals = {}
-  sub_principals = {}
-  tags           = module.example_context.tags
+  # KMS configuration
+  kms_key_config = module.context.enabled ? {
+    key_id    = aws_kms_key.kms_key[0].key_id
+    key_arn   = aws_kms_key.kms_key[0].arn
+    policy_id = "${module.context.id}-sqs-kms-policy"
+  } : null
 }
