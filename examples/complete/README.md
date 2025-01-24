@@ -1,6 +1,20 @@
 # Example
 
-This example demonstrates how to use the `express_step_function_error_notification` module to send error notifications for a given Step Function.
+This example demonstrates how to use the `express_step_function_error_notification` module to send error notifications for a given Step Function. It uses KMS encryption for the SQS Dead Letter Queue.
+
+The example creates the following prerequisite resources:
+
+- A KMS key
+- 3 Step Functions
+- 2 SNS topics
+
+Then it uses their outputs to configure the `express_step_function_error_notification` module. The module creates the following resources:
+
+- 3 Log Group Subscription Filters (1 per Step Function)
+- 1 Lambda function
+- 3 EventBridge Rules (1 per Step Function)
+- 3 SQS queues with KMS encryption (1 per Step Function)
+- 6 CloudWatch Alarms with SNS actions (2 per Step Function)
 
 ## Prerequisites
 
