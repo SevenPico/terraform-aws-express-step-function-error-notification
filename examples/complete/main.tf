@@ -27,7 +27,8 @@ module "express_sfn_error_notifications" {
 
   step_functions = module.context.enabled ? {
     for id, sfn in module.step_function : id => {
-      arn = sfn.state_machine_arn
+      arn            = sfn.state_machine_arn
+      log_group_name = "/aws/vendedlogs/states/${split(":stateMachine:", sfn.state_machine_arn)[1]}"
     }
   } : {}
 
