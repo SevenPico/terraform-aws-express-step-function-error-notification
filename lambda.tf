@@ -5,7 +5,7 @@ module "lambda_context" {
 }
 
 locals {
-  lambda_name = "xsf-log-to-eventbridge"
+  lambda_name = "${module.context.id}-xsf-log-to-eventbridge"
 }
 
 #------------------------------------------------------------------------------
@@ -38,6 +38,7 @@ module "xsf_log_to_eventbridge_lambda" {
   version = "2.0.3"
 
   function_name = local.lambda_name
+  role_name     = "${local.lambda_name}-role"
   description   = "Forwards Express Step Functions logs it receives from CloudWatch Subscription Filter to EventBridge on the default event bus"
   runtime       = "nodejs20.x"
   handler       = "index.handler"

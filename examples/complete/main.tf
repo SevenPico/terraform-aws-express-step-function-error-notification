@@ -2,7 +2,7 @@ module "example_context" {
   source     = "registry.terraform.io/SevenPico/context/null"
   version    = "2.0.0"
   context    = module.context.self
-  attributes = ["example"]
+  attributes = [""]
   enabled    = module.context.enabled
 }
 
@@ -23,7 +23,7 @@ locals {
 module "express_sfn_error_notifications" {
   source     = "../../"
   context    = module.example_context.self
-  attributes = ["example"]
+  attributes = [""]
 
   step_functions = module.context.enabled ? {
     for id, sfn in module.step_function : id => {
