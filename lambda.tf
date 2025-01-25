@@ -82,5 +82,5 @@ resource "aws_lambda_permission" "cloudwatch_logs" {
   action        = "lambda:InvokeFunction"
   function_name = module.xsf_log_to_eventbridge_lambda[0].function_name
   principal     = "logs.${data.aws_region.current[0].name}.amazonaws.com"
-  source_arn    = "arn:aws:logs:${data.aws_region.current[0].name}:${data.aws_caller_identity.current[0].account_id}:log-group:/aws/vendedlogs/states/${each.value.name}:*"
+  source_arn    = "arn:aws:logs:${data.aws_region.current[0].name}:${data.aws_caller_identity.current[0].account_id}:log-group:${each.value.log_group_name}:*"
 }
