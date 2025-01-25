@@ -1,8 +1,8 @@
 variable "step_functions" {
   description = "Map of Express Step Functions to monitor"
   type = map(object({
-    arn = string
-    // Optional overrides for each step function
+    arn                   = string
+    log_group_name        = optional(string)
     sqs_queue_name        = optional(string)
     rate_alarm_name       = optional(string)
     volume_alarm_name     = optional(string)

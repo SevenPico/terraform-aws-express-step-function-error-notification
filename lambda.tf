@@ -70,7 +70,7 @@ module "xsf_log_to_eventbridge_lambda" {
 resource "aws_cloudwatch_log_subscription_filter" "xsf_failures" {
   for_each        = module.lambda_context.enabled ? local.step_functions : {}
   name            = "xsf-failures-to-eventbridge-${each.value.name}"
-  log_group_name  = "/aws/vendedlogs/states/${each.value.name}"
+  log_group_name  = each.value.log_group_name
   filter_pattern  = "{ $.type = \"ExecutionFailed\" }"
   destination_arn = module.xsf_log_to_eventbridge_lambda[0].arn
 }
