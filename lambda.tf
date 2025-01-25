@@ -5,7 +5,7 @@ module "lambda_context" {
 }
 
 locals {
-  lambda_name = "xsf-log-to-eventbridge"
+  lambda_name = "${module.context.id}-xsf-log-to-eventbridge"
 }
 
 #------------------------------------------------------------------------------
@@ -38,6 +38,7 @@ module "xsf_log_to_eventbridge_lambda" {
   version = "2.0.3"
 
   function_name = local.lambda_name
+  role_name     = "${local.lambda_name}-role"
   description   = "Forwards Express Step Functions logs it receives from CloudWatch Subscription Filter to EventBridge on the default event bus"
   runtime       = "nodejs20.x"
   handler       = "index.handler"
@@ -70,7 +71,7 @@ module "xsf_log_to_eventbridge_lambda" {
 resource "aws_cloudwatch_log_subscription_filter" "xsf_failures" {
   for_each        = module.lambda_context.enabled ? local.step_functions : {}
   name            = "xsf-failures-to-eventbridge-${each.value.name}"
-  log_group_name  = "/aws/vendedlogs/states/${each.value.name}"
+  log_group_name  = each.value.log_group_name
   filter_pattern  = "{ $.type = \"ExecutionFailed\" }"
   destination_arn = module.xsf_log_to_eventbridge_lambda[0].arn
 }
@@ -82,5 +83,5 @@ resource "aws_lambda_permission" "cloudwatch_logs" {
   action        = "lambda:InvokeFunction"
   function_name = module.xsf_log_to_eventbridge_lambda[0].function_name
   principal     = "logs.${data.aws_region.current[0].name}.amazonaws.com"
-  source_arn    = "arn:aws:logs:${data.aws_region.current[0].name}:${data.aws_caller_identity.current[0].account_id}:log-group:/aws/vendedlogs/states/${each.value.name}:*"
+  source_arn    = "arn:aws:logs:${data.aws_region.current[0].name}:${data.aws_caller_identity.current[0].account_id}:log-group:${each.value.log_group_name}:*"
 }

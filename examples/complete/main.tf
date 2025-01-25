@@ -2,7 +2,7 @@ module "example_context" {
   source     = "registry.terraform.io/SevenPico/context/null"
   version    = "2.0.0"
   context    = module.context.self
-  attributes = ["example"]
+  attributes = [""]
   enabled    = module.context.enabled
 }
 
@@ -23,11 +23,12 @@ locals {
 module "express_sfn_error_notifications" {
   source     = "../../"
   context    = module.example_context.self
-  attributes = ["example"]
+  attributes = [""]
 
   step_functions = module.context.enabled ? {
     for id, sfn in module.step_function : id => {
-      arn = sfn.state_machine_arn
+      arn            = sfn.state_machine_arn
+      log_group_name = "/aws/vendedlogs/states/${split(":stateMachine:", sfn.state_machine_arn)[1]}"
     }
   } : {}
 
