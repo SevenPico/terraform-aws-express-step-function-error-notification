@@ -41,13 +41,13 @@ variable "alarms_period" {
 variable "alarms_datapoints_to_alarm" {
   description = "(Optional) Number of data points that must breach to trigger the alarm."
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "alarms_evaluation_periods" {
   description = "(Optional) Number of periods over which data is compared to the specified threshold."
   type        = number
-  default     = 2
+  default     = 5
 }
 
 variable "eventbridge_pipe_name" {
@@ -80,18 +80,11 @@ variable "target_step_function_input_template" {
   default     = "<$.detail.input>"
 }
 
-variable "sns_kms_key_id" {
-  description = "(Optional) Managed key for encryption at rest. Defaults to null."
-  type        = string
-  default     = null
-}
-
-variable "kms_key_config" {
-  description = "Optional KMS key configuration for encryption. If not provided, default AWS managed keys will be used."
+variable "sqs_kms_key_config" {
+  description = "(Optional) When present, all generated SQS queues will be encrypted with the provided KMS key. If not provided, default AWS managed keys will be used."
   type = object({
-    key_id    = string
-    key_arn   = string
-    policy_id = optional(string)
+    key_id  = string
+    key_arn = string
   })
   default = null
 }

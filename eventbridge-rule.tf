@@ -14,7 +14,7 @@ locals {
 }
 
 resource "aws_cloudwatch_event_rule" "eventbridge_rule" {
-  for_each    = module.sfn_error_notification_context.enabled ? local.eventbridge_rules : {}
+  for_each    = module.context.enabled ? local.eventbridge_rules : {}
   name        = each.value.name
   description = "Eventbridge rule to route failure events to sqs for ${split(":stateMachine:", each.value.arn)[1]}"
 
@@ -38,7 +38,7 @@ resource "aws_cloudwatch_event_rule" "eventbridge_rule" {
 }
 
 resource "aws_cloudwatch_event_target" "eventbridge_target" {
-  for_each  = module.sfn_error_notification_context.enabled ? local.eventbridge_rules : {}
+  for_each  = module.context.enabled ? local.eventbridge_rules : {}
   rule      = aws_cloudwatch_event_rule.eventbridge_rule[each.key].name
   target_id = "send-failed-to-dlq"
   arn       = aws_sqs_queue.dead_letter_queue[each.key].arn

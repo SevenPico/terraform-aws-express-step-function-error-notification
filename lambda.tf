@@ -25,15 +25,15 @@ data "aws_iam_policy_document" "xsf_log_to_eventbridge_lambda_policy" {
 
 # Add this data source to zip the file
 data "archive_file" "lambda_zip" {
-  count       = module.lambda_context.enabled ? 1 : 0
+  count       = module.context.enabled ? 1 : 0
   type        = "zip"
   source_file = "${path.module}/lambdas/xsf-log-to-eventbridge/index.mjs"
   output_path = "${path.module}/lambdas/xsf-log-to-eventbridge/index.zip"
 }
 
 module "xsf_log_to_eventbridge_lambda" {
-  count   = module.lambda_context.enabled ? 1 : 0
-  enabled = module.lambda_context.enabled
+  count   = module.context.enabled ? 1 : 0
+  enabled = module.context.enabled
   source  = "registry.terraform.io/SevenPicoForks/lambda-function/aws"
   version = "2.0.3"
 
@@ -69,7 +69,7 @@ module "xsf_log_to_eventbridge_lambda" {
 
 # Add subscription filter for each Step Function
 resource "aws_cloudwatch_log_subscription_filter" "xsf_failures" {
-  for_each        = module.lambda_context.enabled ? local.step_functions : {}
+  for_each        = module.context.enabled ? local.step_functions : {}
   name            = "xsf-failures-to-eventbridge-${each.value.name}"
   log_group_name  = each.value.log_group_name
   filter_pattern  = "{ $.type = \"ExecutionFailed\" }"
@@ -78,7 +78,7 @@ resource "aws_cloudwatch_log_subscription_filter" "xsf_failures" {
 
 # Update Lambda permission to allow all Step Function log groups
 resource "aws_lambda_permission" "cloudwatch_logs" {
-  for_each      = module.lambda_context.enabled ? local.step_functions : {}
+  for_each      = module.context.enabled ? local.step_functions : {}
   statement_id  = "CloudWatchLogsAllowLambdaInvokeFunction-${each.value.name}"
   action        = "lambda:InvokeFunction"
   function_name = module.xsf_log_to_eventbridge_lambda[0].function_name
