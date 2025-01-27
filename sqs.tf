@@ -5,7 +5,7 @@ module "sqs_context" {
 }
 
 resource "aws_sqs_queue" "dead_letter_queue" {
-  for_each                   = module.sfn_error_notification_context.enabled ? var.step_functions : {}
+  for_each                   = module.context.enabled ? var.step_functions : {}
   name                       = local.step_functions[each.key].sqs_queue_name
   message_retention_seconds  = var.sqs_message_retention_seconds
   visibility_timeout_seconds = var.sqs_visibility_timeout_seconds
@@ -20,7 +20,7 @@ resource "aws_sqs_queue" "dead_letter_queue" {
 
 
 resource "aws_sqs_queue_policy" "queue_policy" {
-  for_each  = module.sfn_error_notification_context.enabled ? var.step_functions : {}
+  for_each  = module.context.enabled ? var.step_functions : {}
   queue_url = aws_sqs_queue.dead_letter_queue[each.key].url
 
   policy = jsonencode({

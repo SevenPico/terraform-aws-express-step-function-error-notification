@@ -68,7 +68,7 @@ resource "aws_cloudwatch_metric_alarm" "volume_alarm" {
 }
 
 data "aws_iam_policy_document" "rate_sns_publish_policy" {
-  count = module.sfn_error_notification_context.enabled ? 1 : 0
+  count = module.context.enabled ? 1 : 0
 
   statement {
     sid    = "AllowPublishToSNS"
@@ -88,7 +88,7 @@ data "aws_iam_policy_document" "rate_sns_publish_policy" {
 }
 
 data "aws_iam_policy_document" "volume_sns_publish_policy" {
-  count = module.sfn_error_notification_context.enabled ? 1 : 0
+  count = module.context.enabled ? 1 : 0
 
   statement {
     sid    = "AllowPublishToSNS"
@@ -108,13 +108,13 @@ data "aws_iam_policy_document" "volume_sns_publish_policy" {
 }
 
 resource "aws_sns_topic_policy" "rate_alarm_policy" {
-  count  = module.sfn_error_notification_context.enabled ? 1 : 0
+  count  = module.context.enabled ? 1 : 0
   arn    = var.rate_sns_topic_arn
   policy = data.aws_iam_policy_document.rate_sns_publish_policy[0].json
 }
 
 resource "aws_sns_topic_policy" "volume_alarm_policy" {
-  count  = module.sfn_error_notification_context.enabled ? 1 : 0
+  count  = module.context.enabled ? 1 : 0
   arn    = var.volume_sns_topic_arn
   policy = data.aws_iam_policy_document.volume_sns_publish_policy[0].json
 }
