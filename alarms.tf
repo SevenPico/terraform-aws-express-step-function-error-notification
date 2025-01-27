@@ -67,54 +67,55 @@ resource "aws_cloudwatch_metric_alarm" "volume_alarm" {
   )
 }
 
-data "aws_iam_policy_document" "sns_publish_policy" {
-  count = module.sfn_error_notification_context.enabled && var.sns_kms_key_config != null ? 1 : 0
+data "aws_iam_policy_document" "rate_sns_publish_policy" {
+  count = module.sfn_error_notification_context.enabled ? 1 : 0
 
   statement {
+    sid    = "AllowPublishToSNS"
     effect = "Allow"
     principals {
       type        = "Service"
       identifiers = ["cloudwatch.amazonaws.com"]
     }
-    actions = ["sns:Publish"]
-    resources = [
-      var.rate_sns_topic_arn,
-      var.volume_sns_topic_arn
-    ]
-  }
-
-  statement {
-    sid    = "AllowKMSEncryption"
-    effect = "Allow"
-    principals {
-      type        = "Service"
-      identifiers = ["cloudwatch.amazonaws.com"]
-    }
-    actions = [
-      "kms:Decrypt",
-      "kms:GenerateDataKey"
-    ]
-    resources = [var.sns_kms_key_config.key_arn]
+    actions   = ["sns:Publish"]
+    resources = [var.rate_sns_topic_arn]
     condition {
       test     = "ArnLike"
       variable = "aws:SourceArn"
-      values = [
-        "arn:aws:cloudwatch:${data.aws_region.current[0].name}:${data.aws_caller_identity.current[0].account_id}:alarm:*-rate-alarm",
-        "arn:aws:cloudwatch:${data.aws_region.current[0].name}:${data.aws_caller_identity.current[0].account_id}:alarm:*-volume-alarm"
-      ]
+      values   = ["arn:aws:cloudwatch:${data.aws_region.current[0].name}:${data.aws_caller_identity.current[0].account_id}:alarm:*-rate-alarm"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "volume_sns_publish_policy" {
+  count = module.sfn_error_notification_context.enabled ? 1 : 0
+
+  statement {
+    sid    = "AllowPublishToSNS"
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["cloudwatch.amazonaws.com"]
+    }
+    actions   = ["sns:Publish"]
+    resources = [var.volume_sns_topic_arn]
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["arn:aws:cloudwatch:${data.aws_region.current[0].name}:${data.aws_caller_identity.current[0].account_id}:alarm:*-volume-alarm"]
     }
   }
 }
 
 resource "aws_sns_topic_policy" "rate_alarm_policy" {
-  count  = module.sfn_error_notification_context.enabled && var.sns_kms_key_config != null ? 1 : 0
+  count  = module.sfn_error_notification_context.enabled ? 1 : 0
   arn    = var.rate_sns_topic_arn
-  policy = data.aws_iam_policy_document.sns_publish_policy[0].json
+  policy = data.aws_iam_policy_document.rate_sns_publish_policy[0].json
 }
 
 resource "aws_sns_topic_policy" "volume_alarm_policy" {
-  count  = module.sfn_error_notification_context.enabled && var.sns_kms_key_config != null ? 1 : 0
+  count  = module.sfn_error_notification_context.enabled ? 1 : 0
   arn    = var.volume_sns_topic_arn
-  policy = data.aws_iam_policy_document.sns_publish_policy[0].json
+  policy = data.aws_iam_policy_document.volume_sns_publish_policy[0].json
 }
 

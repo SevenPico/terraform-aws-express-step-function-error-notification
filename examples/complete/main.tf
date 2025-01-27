@@ -37,13 +37,7 @@ module "express_sfn_error_notifications" {
 
   # KMS configuration for SQS
   sqs_kms_key_config = module.context.enabled ? {
-    key_id  = aws_kms_key.sqs_key[0].key_id
-    key_arn = aws_kms_key.sqs_key[0].arn
-  } : null
-
-  # KMS configuration for SNS
-  sns_kms_key_config = module.context.enabled ? {
-    key_id  = aws_kms_key.sns_key[0].key_id
-    key_arn = aws_kms_key.sns_key[0].arn
+    key_id  = aws_kms_key.sqs_kms_key[0].key_id
+    key_arn = aws_kms_key.sqs_kms_key[0].arn
   } : null
 }

@@ -80,15 +80,6 @@ variable "target_step_function_input_template" {
   default     = "<$.detail.input>"
 }
 
-variable "sns_kms_key_config" {
-  description = "(Optional) If the provided rate and volume SNS topics are KMS encrypted, provide the KMS key configuration. Only supports a single key shared by both SNS topics."
-  type = object({
-    key_id  = string
-    key_arn = string
-  })
-  default = null
-}
-
 variable "sqs_kms_key_config" {
   description = "(Optional) When present, all generated SQS queues will be encrypted with the provided KMS key. If not provided, default AWS managed keys will be used."
   type = object({

@@ -9,7 +9,7 @@ resource "aws_sqs_queue" "dead_letter_queue" {
   name                       = local.step_functions[each.key].sqs_queue_name
   message_retention_seconds  = var.sqs_message_retention_seconds
   visibility_timeout_seconds = var.sqs_visibility_timeout_seconds
-  kms_master_key_id          = try(var.kms_key_config.key_id, null)
+  kms_master_key_id          = try(var.sqs_kms_key_config.key_id, null)
   tags = merge(
     module.sfn_error_notification_context.tags,
     {

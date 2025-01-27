@@ -1,5 +1,5 @@
 # KMS Key for SQS encryption
-resource "aws_kms_key" "sqs_key" {
+resource "aws_kms_key" "sqs_kms_key" {
   count                   = module.context.enabled ? 1 : 0
   description             = "KMS key for SQS queue encryption"
   deletion_window_in_days = 7
@@ -24,13 +24,17 @@ resource "aws_kms_key" "sqs_key" {
           Service = "events.amazonaws.com"
         }
         Action = [
+          "kms:Encrypt",
           "kms:Decrypt",
           "kms:GenerateDataKey"
         ]
         Resource = ["arn:aws:kms:${local.region}:${local.account_id}:key/*"]
         Condition = {
           StringEquals = {
-            "aws:SourceAccount" = local.account_id
+            "kms:ViaService" = "sns.${local.region}.amazonaws.com"
+          },
+          StringLike = {
+            "kms:CallerAccount" = local.account_id
           }
         }
       }
@@ -41,7 +45,7 @@ resource "aws_kms_key" "sqs_key" {
 }
 
 # KMS Key for SNS encryption
-resource "aws_kms_key" "sns_key" {
+resource "aws_kms_key" "sns_kms_key" {
   count                   = module.context.enabled ? 1 : 0
   description             = "KMS key for SNS topic encryption"
   deletion_window_in_days = 7
@@ -58,6 +62,29 @@ resource "aws_kms_key" "sns_key" {
         }
         Action   = "kms:*"
         Resource = "*"
+      },
+      {
+        Sid    = "Allow CloudWatch Alarms to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudwatch.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = local.account_id
+          },
+          ArnLike = {
+            "aws:SourceArn" = [
+              "arn:aws:cloudwatch:${local.region}:${local.account_id}:alarm:*-rate-alarm",
+              "arn:aws:cloudwatch:${local.region}:${local.account_id}:alarm:*-volume-alarm"
+            ]
+          }
+        }
       }
     ]
   })
@@ -65,14 +92,14 @@ resource "aws_kms_key" "sns_key" {
   tags = module.context.tags
 }
 
-resource "aws_kms_alias" "sqs_key_alias" {
+resource "aws_kms_alias" "sqs_kms_key_alias" {
   count         = module.context.enabled ? 1 : 0
   name          = "alias/${module.context.id}-sqs-kms-key"
-  target_key_id = aws_kms_key.sqs_key[0].key_id
+  target_key_id = aws_kms_key.sqs_kms_key[0].key_id
 }
 
-resource "aws_kms_alias" "sns_key_alias" {
+resource "aws_kms_alias" "sns_kms_key_alias" {
   count         = module.context.enabled ? 1 : 0
   name          = "alias/${module.context.id}-sns-kms-key"
-  target_key_id = aws_kms_key.sns_key[0].key_id
+  target_key_id = aws_kms_key.sns_kms_key[0].key_id
 } 
