@@ -41,13 +41,13 @@ variable "alarms_period" {
 variable "alarms_datapoints_to_alarm" {
   description = "(Optional) Number of data points that must breach to trigger the alarm."
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "alarms_evaluation_periods" {
   description = "(Optional) Number of periods over which data is compared to the specified threshold."
   type        = number
-  default     = 2
+  default     = 5
 }
 
 variable "eventbridge_pipe_name" {

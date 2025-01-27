@@ -49,8 +49,8 @@ resource "aws_cloudwatch_metric_alarm" "volume_alarm" {
   namespace           = "AWS/SQS"
   statistic           = "Maximum"
   period              = var.alarms_period
-  evaluation_periods  = var.alarms_evaluation_periods
-  datapoints_to_alarm = var.alarms_datapoints_to_alarm
+  evaluation_periods  = 1
+  datapoints_to_alarm = 1
   comparison_operator = "GreaterThanThreshold"
   threshold           = 0
   treat_missing_data  = "ignore"
