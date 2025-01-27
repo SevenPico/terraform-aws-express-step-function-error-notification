@@ -178,6 +178,14 @@ object({
 - [x] Alarm and Notify when dead letter queue volume is above zero
 - [x] Alarm and Notify when dead letter queue rate is recently above zero
 
+### v0.1.1
+
+- [x] Optionally pass Step Function Log Group name as parameter
+
+### v0.1.2
+
+- [x] Alarms publish to SNS
+
 ### v1.0.0
 
 - [ ] Lambda function associates execution inputs with the failed execution
