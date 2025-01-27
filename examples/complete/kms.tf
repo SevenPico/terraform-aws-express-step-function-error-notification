@@ -15,7 +15,7 @@ resource "aws_kms_key" "sqs_kms_key" {
           AWS = "arn:aws:iam::${data.aws_caller_identity.current[0].account_id}:root"
         }
         Action   = "kms:*"
-        Resource = "*"
+        Resource = ["arn:aws:kms:${local.region}:${local.account_id}:key/*"]
       },
       {
         Sid    = "Allow EventBridge to use the key"
@@ -24,17 +24,13 @@ resource "aws_kms_key" "sqs_kms_key" {
           Service = "events.amazonaws.com"
         }
         Action = [
-          "kms:Encrypt",
           "kms:Decrypt",
           "kms:GenerateDataKey"
         ]
         Resource = ["arn:aws:kms:${local.region}:${local.account_id}:key/*"]
         Condition = {
           StringEquals = {
-            "kms:ViaService" = "sns.${local.region}.amazonaws.com"
-          },
-          StringLike = {
-            "kms:CallerAccount" = local.account_id
+            "aws:SourceAccount" = local.account_id
           }
         }
       }
@@ -61,7 +57,7 @@ resource "aws_kms_key" "sns_kms_key" {
           AWS = "arn:aws:iam::${data.aws_caller_identity.current[0].account_id}:root"
         }
         Action   = "kms:*"
-        Resource = "*"
+        Resource = ["arn:aws:kms:${local.region}:${local.account_id}:key/*"]
       },
       {
         Sid    = "Allow CloudWatch Alarms to use the key"
@@ -70,14 +66,12 @@ resource "aws_kms_key" "sns_kms_key" {
           Service = "cloudwatch.amazonaws.com"
         }
         Action = [
+          "kms:Encrypt",
           "kms:Decrypt",
           "kms:GenerateDataKey"
         ]
-        Resource = "*"
+        Resource = ["arn:aws:kms:${local.region}:${local.account_id}:key/*"]
         Condition = {
-          StringEquals = {
-            "aws:SourceAccount" = local.account_id
-          },
           ArnLike = {
             "aws:SourceArn" = [
               "arn:aws:cloudwatch:${local.region}:${local.account_id}:alarm:*-rate-alarm",

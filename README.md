@@ -61,18 +61,52 @@ see [example](./examples/complete.main.tf) for a complete example.
 
 ### KMS Encryption
 
-If you want to use KMS encryption for the SQS queues this module creates, you must provide a KMS key configuration object that refers to an existing KMS key. This module will use the key to encrypt the SQS queues.
+#### Generate KMS Encrypted SQS Queues
 
-If your provided SNS topics are KMS-encrypted, that key must have a key policy that allows the EventBridge service to use the key.
+If you want to use KMS encryption for the SQS queues this module creates, you must provide a KMS key configuration object that refers to an existing KMS key. This module will use the key to encrypt the SQS queues. This key must have a key policy that allows the EventBridge service to use the key.
 
 e.g.
 
 ```hcl
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
       {
         Sid    = "Allow EventBridge to use the key"
         Effect = "Allow"
         Principal = {
           Service = "events.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = ["arn:aws:kms:${local.region}:${local.account_id}:key/*"]
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = local.account_id
+          }
+        }
+      }
+    ]
+  })
+```
+
+#### KMS Encrypted Input SNS Topics
+
+If your provided SNS topics are KMS-encrypted, that key must have a key policy that allows the CloudWatch service to use the key.
+
+e.g.
+
+```hcl
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Allow CloudWatch Alarms to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudwatch.amazonaws.com"
         }
         Action = [
           "kms:Encrypt",
@@ -81,14 +115,16 @@ e.g.
         ]
         Resource = ["arn:aws:kms:${local.region}:${local.account_id}:key/*"]
         Condition = {
-          StringEquals = {
-            "kms:ViaService" = "sns.${local.region}.amazonaws.com"
-          },
-          StringLike = {
-            "kms:CallerAccount" = local.account_id
+          ArnLike = {
+            "aws:SourceArn" = [
+              "arn:aws:cloudwatch:${local.region}:${local.account_id}:alarm:*-rate-alarm",
+              "arn:aws:cloudwatch:${local.region}:${local.account_id}:alarm:*-volume-alarm"
+            ]
           }
         }
       }
+    ]
+  })
 ```
 
 ## Inputs / Variables
