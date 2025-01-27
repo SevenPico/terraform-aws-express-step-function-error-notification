@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_metric_alarm" "rate_alarm" {
-  for_each          = module.sfn_error_notification_context.enabled ? local.step_functions : {}
+  for_each          = module.context.enabled ? local.step_functions : {}
   depends_on        = [var.rate_sns_topic_arn]
   alarm_name        = "${each.value.name}-rate-alarm"
   alarm_description = "ALARM when the rate of growth for the ${each.value.name} Dead Letter Queue exceeds the threshold"
@@ -40,7 +40,7 @@ resource "aws_cloudwatch_metric_alarm" "rate_alarm" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "volume_alarm" {
-  for_each   = module.sfn_error_notification_context.enabled ? local.step_functions : {}
+  for_each   = module.context.enabled ? local.step_functions : {}
   depends_on = [var.volume_sns_topic_arn]
 
   alarm_name          = "${each.value.name}-volume-alarm"
