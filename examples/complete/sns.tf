@@ -22,6 +22,8 @@ module "rate_alarm_alert_sns" {
 
   pub_principals = {}
   sub_principals = {}
+
+  kms_master_key_id = module.context.enabled ? aws_kms_key.sns_key[0].id : null
 }
 
 module "volume_alarm_alert_sns" {
@@ -32,4 +34,6 @@ module "volume_alarm_alert_sns" {
 
   pub_principals = {}
   sub_principals = {}
+
+  kms_master_key_id = module.context.enabled ? aws_kms_key.sns_key[0].id : null
 }

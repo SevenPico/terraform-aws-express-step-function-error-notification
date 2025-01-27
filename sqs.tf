@@ -40,7 +40,7 @@ resource "aws_sqs_queue_policy" "queue_policy" {
           }
         }
       }],
-      var.kms_key_config != null ? [{
+      var.sqs_kms_key_config != null ? [{
         Sid    = "KmsPermissions"
         Effect = "Allow"
         Principal = {
@@ -50,7 +50,7 @@ resource "aws_sqs_queue_policy" "queue_policy" {
           "kms:Decrypt",
           "kms:GenerateDataKey"
         ]
-        Resource = var.kms_key_config.key_arn
+        Resource = var.sqs_kms_key_config.key_arn
         Condition = {
           ArnEquals = {
             "aws:SourceArn" = aws_cloudwatch_event_rule.eventbridge_rule[each.key].arn
