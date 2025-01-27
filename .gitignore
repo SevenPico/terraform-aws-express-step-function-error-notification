@@ -38,3 +38,6 @@ generated-providers.tf
 
 # Ignore generated Lambda zip files
 **/lambdas/**/*.zip
+
+**/*.log
+  

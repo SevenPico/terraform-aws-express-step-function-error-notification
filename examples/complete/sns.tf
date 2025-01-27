@@ -15,21 +15,25 @@ module "example_volume_sns_context" {
 }
 
 module "rate_alarm_alert_sns" {
-  count   = module.example_rate_sns_context.enabled ? 1 : 0
+  count   = module.context.enabled ? 1 : 0
   source  = "SevenPico/sns/aws"
   version = "2.0.2"
   context = module.example_rate_sns_context.self
 
   pub_principals = {}
   sub_principals = {}
+
+  kms_master_key_id = module.context.enabled ? aws_kms_key.sns_kms_key[0].id : null
 }
 
 module "volume_alarm_alert_sns" {
-  count   = module.example_volume_sns_context.enabled ? 1 : 0
+  count   = module.context.enabled ? 1 : 0
   source  = "SevenPico/sns/aws"
   version = "2.0.2"
   context = module.example_volume_sns_context.self
 
   pub_principals = {}
   sub_principals = {}
+
+  kms_master_key_id = module.context.enabled ? aws_kms_key.sns_kms_key[0].id : null
 }

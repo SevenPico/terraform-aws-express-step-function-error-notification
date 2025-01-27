@@ -15,6 +15,7 @@ Then it uses their outputs to configure the `express_step_function_error_notific
 - 3 EventBridge Rules (1 per Step Function)
 - 3 SQS queues with KMS encryption (1 per Step Function)
 - 6 CloudWatch Alarms with SNS actions (2 per Step Function)
+  - with permission to publish to KMS encrypted SNS topics
 
 ## Prerequisites
 

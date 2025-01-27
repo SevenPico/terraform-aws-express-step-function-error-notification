@@ -59,6 +59,74 @@ This module creates a single instance of the Lambda function which is shared acr
 
 see [example](./examples/complete.main.tf) for a complete example.
 
+### KMS Encryption
+
+#### Generate KMS Encrypted SQS Queues
+
+If you want to use KMS encryption for the SQS queues this module creates, you must provide a KMS key configuration object that refers to an existing KMS key. This module will use the key to encrypt the SQS queues. This key must have a key policy that allows the EventBridge service to use the key.
+
+e.g.
+
+```hcl
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Allow EventBridge to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "events.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = ["arn:aws:kms:${local.region}:${local.account_id}:key/*"]
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = local.account_id
+          }
+        }
+      }
+    ]
+  })
+```
+
+#### KMS Encrypted Input SNS Topics
+
+If your provided SNS topics are KMS-encrypted, that key must have a key policy that allows the CloudWatch service to use the key.
+
+e.g.
+
+```hcl
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Allow CloudWatch Alarms to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudwatch.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = ["arn:aws:kms:${local.region}:${local.account_id}:key/*"]
+        Condition = {
+          ArnLike = {
+            "aws:SourceArn" = [
+              "arn:aws:cloudwatch:${local.region}:${local.account_id}:alarm:*-rate-alarm",
+              "arn:aws:cloudwatch:${local.region}:${local.account_id}:alarm:*-volume-alarm"
+            ]
+          }
+        }
+      }
+    ]
+  })
+```
+
 ## Inputs / Variables
 
 | Name                                | Description                                                                                           | Type                                                                                                | Default              | Required |
@@ -77,7 +145,6 @@ see [example](./examples/complete.main.tf) for a complete example.
 | eventbridge_pipe_log_level          | Logging level for EventBridge Pipe                                                                    | `string`                                                                                            | `"ERROR"`            |    no    |
 | cloudwatch_log_retention_days       | Number of days to retain logs in CloudWatch                                                           | `number`                                                                                            | `90`                 |    no    |
 | target_step_function_input_template | Template to prepare dead letter messages for step function re-execution                               | `string`                                                                                            | `"<$.detail.input>"` |    no    |
-| sns_kms_key_id                      | Managed key for SNS encryption at rest                                                                | `string`                                                                                            | `null`               |    no    |
 
 ### step_functions Object Structure
 
@@ -101,15 +168,6 @@ object({
 })
 ```
 
-## KMS Encryption
-
-This module supports optional KMS encryption for the following components:
-
-- SQS Dead Letter Queues
-- EventBridge Rules that publish to the Dead Letter Queues
-
-To enable KMS encryption, provide a KMS key configuration `kms_key_config` object with facts from an already deployed KMS key. This key will be used for encryption of this module's resources.
-
 ## Roadmap
 
 ### v0.1.0
@@ -119,6 +177,14 @@ To enable KMS encryption, provide a KMS key configuration `kms_key_config` objec
 - [x] Execution ID in dead letter queue messages
 - [x] Alarm and Notify when dead letter queue volume is above zero
 - [x] Alarm and Notify when dead letter queue rate is recently above zero
+
+### v0.1.1
+
+- [x] Optionally pass Step Function Log Group name as parameter
+
+### v0.1.2
+
+- [x] Alarms publish to SNS
 
 ### v1.0.0
 

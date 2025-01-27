@@ -35,10 +35,9 @@ module "express_sfn_error_notifications" {
   rate_sns_topic_arn   = try(module.rate_alarm_alert_sns[0].topic_arn, "")
   volume_sns_topic_arn = try(module.volume_alarm_alert_sns[0].topic_arn, "")
 
-  # KMS configuration
-  kms_key_config = module.context.enabled ? {
-    key_id    = aws_kms_key.kms_key[0].key_id
-    key_arn   = aws_kms_key.kms_key[0].arn
-    policy_id = "${module.context.id}-sqs-kms-policy"
+  # KMS configuration for SQS
+  sqs_kms_key_config = module.context.enabled ? {
+    key_id  = aws_kms_key.sqs_kms_key[0].key_id
+    key_arn = aws_kms_key.sqs_kms_key[0].arn
   } : null
 }
