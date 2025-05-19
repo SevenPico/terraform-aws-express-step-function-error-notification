@@ -72,7 +72,7 @@ resource "aws_cloudwatch_log_subscription_filter" "xsf_failures" {
   name            = "xsf-failures-to-eventbridge-${each.value.name}"
   log_group_name  = each.value.log_group_name
   filter_pattern  = "{ $.type = \"ExecutionFailed\" }"
-  destination_arn = module.xsf_log_to_eventbridge_lambda[0].arn
+  destination_arn = module.xsf_log_to_eventbridge_lambda.arn
 }
 
 # Update Lambda permission to allow all Step Function log groups
@@ -80,7 +80,7 @@ resource "aws_lambda_permission" "cloudwatch_logs" {
   for_each      = module.context.enabled ? local.step_functions : {}
   statement_id  = "CloudWatchLogsAllowLambdaInvokeFunction-${each.value.name}"
   action        = "lambda:InvokeFunction"
-  function_name = module.xsf_log_to_eventbridge_lambda[0].function_name
+  function_name = module.xsf_log_to_eventbridge_lambda.function_name
   principal     = "logs.${data.aws_region.current[0].name}.amazonaws.com"
   source_arn    = "arn:aws:logs:${data.aws_region.current[0].name}:${data.aws_caller_identity.current[0].account_id}:log-group:${each.value.log_group_name}:*"
 }
