@@ -32,22 +32,21 @@ data "archive_file" "lambda_zip" {
 }
 
 module "xsf_log_to_eventbridge_lambda" {
-  count   = module.context.enabled ? 1 : 0
-  enabled = module.context.enabled
   source  = "registry.terraform.io/SevenPicoForks/lambda-function/aws"
   version = "2.0.3"
+  context = module.context.self
 
-  function_name = local.lambda_name
-  role_name     = "${local.lambda_name}-role"
-  description   = "Forwards Express Step Functions logs it receives from CloudWatch Subscription Filter to EventBridge on the default event bus"
-  runtime       = "nodejs20.x"
-  handler       = "index.handler"
-  timeout       = 30
-  memory_size   = 128
-  publish       = false
-
-  filename         = data.archive_file.lambda_zip[0].output_path
-  source_code_hash = data.archive_file.lambda_zip[0].output_base64sha256
+  cloudwatch_logs_retention_in_days = var.cloudwatch_log_retention_days
+  description                       = "Forwards Express Step Functions logs it receives from CloudWatch Subscription Filter to EventBridge on the default event bus"
+  filename                          = data.archive_file.lambda_zip[0].output_path
+  function_name                     = local.lambda_name
+  handler                           = "index.handler"
+  memory_size                       = 128
+  publish                           = false
+  role_name                         = "${local.lambda_name}-role"
+  runtime                           = "nodejs20.x"
+  source_code_hash                  = data.archive_file.lambda_zip[0].output_base64sha256
+  timeout                           = 30
 
   lambda_environment = {
     variables = {
